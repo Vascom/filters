@@ -20,8 +20,6 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-    const double pi = 3.1415926535897932384626433832795; //pi :)
-
     const double Fs = atof(argv[1]);          //Sampling frequency, Mhz
     const double F_pass = atof(argv[2]);       //Pass frequency, Mhz
     double F_stop = F_pass + 3;             //Stop frequency, Mhz Usually F_pass+3 Mhz
@@ -76,7 +74,7 @@ int main(int argc, char *argv[])
 
         for(short i=0; i<samples;i++)
         {
-            g[i] = pi*(i+1)/(double((samples<<1)));
+            g[i] = M_PI*(i+1)/(double((samples<<1)));
             sin_pi[i] = pow(sin(g[i]),cic_length);
         }
         short num_Fstop = short(floor(F_stop/Fs*2*samples))-1;
