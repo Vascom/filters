@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
             g[i] = M_PI*(i+1)/(double((samples<<1)));
             sin_pi[i] = pow(sin(g[i]),cic_length);
         }
-        short num_Fstop = short(floor(F_stop/Fs*2*samples))-1;
+        short num_Fstop = short(floor(F_stop/Fs*(samples<<1)))-1;
 
         for(int k =0; k<pow(max_cic,cic_length); k++)
         {
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
                     ach_log[i] = 20*log10(fabs(ach1/ach0));
                 }
                 a_max = *max_element (&ach_log[num_Fstop], &ach_log[samples]);
-                a_tar = ach_log[int(floor(F_pass/Fs*2*samples))-1];
+                a_tar = ach_log[int(floor(F_pass/Fs*(samples<<1)))-1];
                 max_m = *max_element (&m[0], &m[cic_length]);
                 if (a_max<q_stop &&  a_tar>q_pass && (a_tar>a_tar0 || max_m<max_min_m || a_max<a_max0))
                 {
