@@ -2,3 +2,4 @@ cic_comp.cpp        - compute coefficients for CIC-filter
 cic1.m              - compute coefficients for FIR-filter and plot graphs
 fast_cic.sh         - script for fast computing on SMP systems
 bandstop_f_test.m   - compute FIRAJM coefficients for desired diapasons of filter parameters
+start_batch.sh      - quartus work script
