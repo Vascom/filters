@@ -46,10 +46,8 @@ Filter::Filter()
 
     test_out_3.open("data_out/test_out_3.txt",ios::out);
     N1=0;
-    Nsat=0;
     i=0;
     p1=0;
-    psat=0;
     for(i=0;i<cic_stage_number;i++)
     {
         stage_int[i]=0;
@@ -248,8 +246,6 @@ void Filter::LoadCoeff(short s,short cic_del_m[],
     N1_pos = 128;
     h1=new short[N1];
     h1_pos = new short[N1_pos];
-    double *h1d;
-    h1d=new double[N1];
     h1 = h;
     h1[0] = -5;//-5 1
     h2=new short[N2];
@@ -262,22 +258,7 @@ void Filter::LoadCoeff(short s,short cic_del_m[],
     mid_agc_count_n = mid_agc_count_n_pre+1;
     mid_agc_count_p = mid_agc_count_p_pre+1;
     mid_agc_man = mid_agc_man_pre;
-    //for(i=0;i<N1;i++)vivod1<<cic_delay_matrix[i]<<endl;
-    /*ifstream input;
-    input.open(f1);
-    //if(input.fail())cout<<"file not open "<<f1;
-    // Чтение точных коэффициентов фильтра из файла
-    for(i=0;i<N1;i++) input>>h1d[i];
-    // Квантование коэффициентов фильтра
-    for(i=0;i<N1;i++)
-    {
-    h1[i]=short(floor(h1d[i]/abs(h1d[N1-max_coeff])*((1<<(k-1))-0)+0.5));
-    //vivod1<<h1[i]<<endl;
-    //if(h1[i]>=127) h1[i]=127;
-    //else if(h1[i]<=-127) h1[i]=-127;
-    }
-    input.close();
-    */
+    //for(i=0;i<N1;i++)vivod1<<cic_delay_matrix[i]<<endl; 
     /*
     for (short i = 0; i < N1; i++)
     {
@@ -442,35 +423,6 @@ void Filter::LoadCoeff(short s,short cic_del_m[],
     loc_pattern.close();
 }
 
-void Filter::LoadSatCoeff(short lsat, char *f1)
-{
-    Nsat=lsat;
-    hsat=new double[Nsat];
-    ifstream inputsat;
-    inputsat.open(f1);//("data_in/sat10_filt1.fcf");//("data_in/h1_03.fcf");
-    //if(inputsat.fail())cout<<"file not open sat_filt1.fcf";
-    for(i=0;i<lsat;i++) inputsat>>hsat[i];
-    inputsat.close();
-    inputSat=new double[Nsat*2];
-    inputSat_rev=new double[Nsat];
-    for(i=0;i<Nsat*2;i++)
-    {
-        inputSat[i]=0;
-        inputSat_rev[i/2]=0;
-    }
-}
-
-double Filter::SatFilter(double signal)
-{
-    rotate(&inputSat[0], &inputSat[2*Nsat-1], &inputSat[2*Nsat]);
-    inputSat[0]=signal;
-    reverse_copy(&inputSat[Nsat], &inputSat[2*Nsat], &inputSat_rev[0]);
-    transform(&inputSat[0], &inputSat[Nsat], &inputSat_rev[0], &inputSat_rev[0], plus<double>());
-    transform(&inputSat_rev[0], &inputSat_rev[Nsat], &hsat[0], &inputSat_rev[0], multiplies<double>());
-    psat=accumulate<double *__w64,double>(&inputSat_rev[0],&inputSat_rev[Nsat],0);
-    return psat;
-}
-
 //! IIR-filter
 int Filter::IirI(int re, short k1, short k2)
 {
@@ -510,37 +462,11 @@ int Filter::IirI(int re, short k1, short k2)
 
 double Filter::IirIn(double re)
 {
-    double iir_out = 0;
     double iir_out1 = 0;
     double iir_out2 = 0;
     double iir_out3 = 0;
     double iira1d[3],iira2d[3],iira3d[3],iirb1d[3],iirb2d[3],iirb3d[3];
-/*
-iira1d[0] = 1                        ;
-    iira1d[1] =-1.982891822585457                     ;
-    iira1d[2] =  0.98297418042823004            ;
-    //iira[3] = int(floor(-0.94818115234375244*(int(1)<<22)+0.5));
-    iirb1d[0] =  0.017455157327397271                ;
-    iirb1d[1] =-0.034880597155728242         ;
-    iirb1d[2] =  0.017455157327397271           ;
-    //iirb[3] = int(floor(-0.899078369140626  *(int(1)<<22)+0.5));
-    iira2d[0] =   1                        ;
-    iira2d[1] =-1.9971311259106153                     ;
-    iira2d[2] =   0.9971819987139805                 ;
-    //iira[3] = int(floor(-0.94818115234375244*(int(1)<<22)+0.5));
-    iirb2d[0] =      0.77058782238070112                        ;
-    iirb2d[1] = -1.5410814152050689                 ;
-    iirb2d[2] =      0.770587822380701                  ;
-    //iirb[3] = int(floor(-0.899078369140626  *(int(1)<<22)+0.5));
-    iira3d[0] =   1                        ;
-    iira3d[1] =-1.9904248795668047                      ;
-    iira3d[2] =   0.99048773454400563                  ;
-    //iira[3] = int(floor(-0.94818115234375244*(int(1)<<22)+0.5));
-    iirb3d[0] =      1.0001141013056154                            ;
-    iirb3d[1] =-2       ;
-    iirb3d[2] =   1.0001141013056156                     ;
-    //iirb[3] = int(floor(-0.899078369140626  *(int(1)<<22)+0.5));
-*/
+
 // 50MHz carr
     iira1d[0] = 1;
     iira1d[1] =-1.9042720018419801       ;
@@ -621,35 +547,7 @@ iira1d[0] = 1                        ;
     iirb3d[1] =-2;
     iirb3d[2] =1.031603052152922;
     //iirb[3] = int(floor(-0.899078369140626  *(int(1)<<22)+0.5));             ;
-//150 Mhz
-/*
-    iira1d[0] = 1;
-    iira1d[1] =-1.9714511547752931       ;
-    iira1d[2] = 0.97824593318139885      ;
-    //iira[3] = int(floor(-0.94818115234375244*(int(1)<<22)+0.5));
-    iirb1d[0] = 1.0018651015711693       ;
-    iirb1d[1] =-2;
-    iirb1d[2] = 1.0018651015711695       ;
-    //iirb[3] = int(floor(-0.899078369140626  *(int(1)<<22)+0.5));
-    iira2d[0] =1;
-    iira2d[1] =-1.2067260711781589       ;
-    iira2d[2] = 0.81921928650471942      ;
-    //iira[3] = int(floor(-0.94818115234375244*(int(1)<<22)+0.5));
-    iirb2d[0] = 1.9999999999999998       ;
-    iirb2d[1] =-1.823465568428378        ;
-    iirb2d[2] = 1.9999999999999998       ;
-    //iirb[3] = int(floor(-0.899078369140626  *(int(1)<<22)+0.5));
-    iira3d[0] =   1                        ;
-    iira3d[1] =-1.5347646653599734       ;
-    iira3d[2] = 0.59313314904164915      ;
-    //iira[3] = int(floor(-0.94818115234375244*(int(1)<<22)+0.5));
-    iirb3d[0] =2;
-    iirb3d[1] =0;
-    iirb3d[2] =-2;
-    //iirb[3] = int(floor(-0.899078369140626  *(int(1)<<22)+0.5));
-    rotate(&reind[0], &reind[3], &reind[4]);
-    reind[0]=re*1              ;
-*/
+
     iir_out1 = (reind[0]*iirb1d[0])-(reout1d[0]*iira1d[1]);
     iir_out1 += (reind[1]*iirb1d[1])-(reout1d[1]*iira1d[2]);
     iir_out1 += (reind[2]*iirb1d[2]);
@@ -676,27 +574,7 @@ iira1d[0] = 1                        ;
 
     return reout3d[0]/2.727;//2.427/0.9998 /1.121        ;2.727 39
 }
-/*
-int Filter::IirI(int re, short k1, short k2)
-{
-    double iir_out = 0;
-    rotate(&rein[0], &rein[3], &rein[4]);
-    rein[0]=double(re);
 
-
-    iir_out = (rein[0]*iira[0])-(reout[0]*iirb[1]);
-    iir_out += (rein[1]*iira[1])-(reout[1]*iirb[2]);
-    iir_out += (rein[2]*iira[2])-(reout[2]*iirb[3]);
-    iir_out += (rein[3]*iira[3]);
-
-    rotate(&reout[0], &reout[3], &reout[4]);
-    reout[0]=iir_out;
-
-    vivod1<<re<<' '<<reout[0]<<' '<<iir_out<<endl;
-
-    return rein[3];
-}
-*/
 //! FIR-filter
 int Filter::FirI(int re, short k1, short k2)
 {
@@ -890,8 +768,8 @@ int Filter::FFT(int a_in[], int b_in[], short Nfft)
     {
         for(short i=0;i<Nfft2;i++)
         {
-            cos_t_0 =  cos(2*pi/Nfft);
-            sin_t_0 = -sin(2*pi/Nfft);
+            cos_t_0 =  cos(pi_2/Nfft);
+            sin_t_0 = -sin(pi_2/Nfft);
             cos_t = cos_t_0;
             sin_t = sin_t_0;
 
@@ -1030,6 +908,7 @@ int Filter::GetFFT(short a, short b)
     {
         case 0: c = fft_mux_a1_s[a]; break;
         case 1: c = fft_mux_a2_s[a]; break;
+        default:c = 0; break;
     }
     return c;
 }
@@ -1052,6 +931,7 @@ double Filter::Get_cos_sin_cplx(short a)
     {
         case 0: c = cos_sin_cplx_re; break;
         case 1: c = cos_sin_cplx_im; break;
+        default:c = 0; break;
     }
     return c;
 }
@@ -1065,6 +945,7 @@ int Filter::GetFFTb(short a)
         case 1: b = c2_fft; break;
         case 2: b = d1_fft; break;
         case 3: b = d2_fft; break;
+        default:b = 0; break;
     }
     return b;
 }
@@ -2131,26 +2012,11 @@ int Filter::AJFilterNew2_cplx(int aj_in,int aj_in2,short k,short compute_coeff_e
     //vivod1<<inputAJ[0]<<' '<<yk3<<' '<<inputAJ2[0]<<' '<<ykk3<<endl;
     //! Coefficient computing
     //if(compute_coeff_en==0)eps1=eps;
-    int i_f,i_l;
     for(i=0;i<N_aj;i++) w_aj1[i] = w_aj[i];
     for(i=0;i<N_aj;i++) w_aj22[i] = w_aj2[i];
     //if(compute_coeff_en==1)
     {
         int ldel = 1<<(coeffcompldel);//16 15
-        switch(compute_coeff_en)
-        {
-            case 0:    i_f = 0; i_l=20; break;
-            case 1:    i_f = 20; i_l=40; break;
-            case 2:    i_f = 40; i_l=60; break;
-            case 3:    i_f = 60; i_l=80; break;
-            case 4:    i_f = 64; i_l=80; break;
-            default:   i_f = 0; i_l=16; break;
-        }
-        //for(i=i_f;i<i_l;i=i+1)
-        //for(i=16*compute_coeff_en;i<(N_aj/5*(compute_coeff_en+1));i=i+1)
-        //for(i=40*compute_coeff_en;i<(N_aj/2*(compute_coeff_en+1));i=i+1)
-        //for(i=10*compute_coeff_en;i<(N_aj/8*(compute_coeff_en+1));i=i+1)
-        //for(i=1*compute_coeff_en;i<(N_aj/80*(compute_coeff_en+1));i=i+1)
         for(i=0;i<N_aj;i++)
         //for(int j=16*compute_coeff_en;j<(N_aj/5*(compute_coeff_en+1));j=j+1)
         {//i = point[j];
@@ -2225,26 +2091,11 @@ int Filter::AJFilterNew2_cplxs(int aj_in,int aj_in2,short k,short compute_coeff_
     //vivod1<<inputAJ[0]<<' '<<yk3<<' '<<inputAJ2[0]<<' '<<ykk3<<endl;
     //! Coefficient computing
     //if(compute_coeff_en==0)eps1=eps;
-    int i_f,i_l;
     for(i=0;i<N_aj;i++) w_aj1[i] = w_aj[i];
     for(i=0;i<N_aj;i++) w_aj22[i] = w_aj2[i];
     //if(compute_coeff_en==1)
     {
         int ldel = 1<<(coeffcompldel);//16 15
-        switch(compute_coeff_en)
-        {
-            case 0:    i_f = 0; i_l=20; break;
-            case 1:    i_f = 20; i_l=40; break;
-            case 2:    i_f = 40; i_l=60; break;
-            case 3:    i_f = 60; i_l=80; break;
-            case 4:    i_f = 64; i_l=80; break;
-            default:   i_f = 0; i_l=16; break;
-        }
-        //for(i=i_f;i<i_l;i=i+1)
-        //for(i=16*compute_coeff_en;i<(N_aj/5*(compute_coeff_en+1));i=i+1)
-        //for(i=40*compute_coeff_en;i<(N_aj/2*(compute_coeff_en+1));i=i+1)
-        //for(i=10*compute_coeff_en;i<(N_aj/8*(compute_coeff_en+1));i=i+1)
-        //for(i=1*compute_coeff_en;i<(N_aj/80*(compute_coeff_en+1));i=i+1)
         for(i=0;i<1;i++)
         //for(int j=16*compute_coeff_en;j<(N_aj/5*(compute_coeff_en+1));j=j+1)
         {//i = point[j];
@@ -2460,12 +2311,12 @@ void Filter::LoadAJFilter_adv(short N, short adapt_delay, short rez_aj[])
   r_q_s[i]=0;
   r_i_n_s[i]=0;
   r_q_n_s[i]=0;
-  //aj_cplx_const_i[i]=short(floor(cos(2*pi*i/double(Naj))*2047+0.5));
-  //aj_cplx_const_q[i]=short(floor(sin(2*pi*i/double(Naj))*2047+0.5));
+  //aj_cplx_const_i[i]=short(floor(cos(pi_2*i/double(Naj))*2047+0.5));
+  //aj_cplx_const_q[i]=short(floor(sin(pi_2*i/double(Naj))*2047+0.5));
   //if(double(aj_cplx_const_i[i]*aj_cplx_const_i[i]/2048/2048+aj_cplx_const_q[i]*aj_cplx_const_q[i]/2048/2048)>1 && hc_aj[i]==1)
   // cout<<"AJ coeff singularity!"<<" N = "<<Naj<<"; n = "<<i<<endl;
-  aj_cplx_const_i[i]=short(floor(cos(2*pi*i/double(Naj))*127+0.5));
-  aj_cplx_const_q[i]=short(floor(sin(2*pi*i/double(Naj))*127+0.5));
+  aj_cplx_const_i[i]=short(floor(cos(pi_2*i/double(Naj))*127+0.5));
+  aj_cplx_const_q[i]=short(floor(sin(pi_2*i/double(Naj))*127+0.5));
   waj_res_i[i]=0;
   waj_res_q[i]=0;
   w_lms_i[i]=0;
@@ -2478,11 +2329,11 @@ void Filter::LoadAJFilter_adv(short N, short adapt_delay, short rez_aj[])
 
 double Filter::ComplexConst_i(short n)
 {
- return cos(2*pi*n/double(Naj));
+ return cos(pi_2*n/double(Naj));
 }
 double Filter::ComplexConst_q(short n)
 {
- return sin(2*pi*n/double(Naj));
+ return sin(pi_2*n/double(Naj));
 }
 double Filter::AJFilter_adv_double(double aj_in_i,double aj_in_q,short k,short compute_coeff_en)
 {
@@ -2601,25 +2452,20 @@ short Filter::AJFilter_adv(short aj_in_i,short aj_in_q,short k,short compute_coe
     w_lms_i[i]=eps_i2*(r_i_s[i]/Naj)+eps_q2*(r_q_s[i]/Naj);//cout<<w_lms_i[4]/sdvig<<endl;
     w_lms_q[i]=-eps_i2*(r_q_s[i]/Naj)+eps_q2*(r_i_s[i]/Naj);
 
-	w_aj_i[i] += (w_lms_i[i]+waj_res_i[i])/sdvig;
+    w_aj_i[i] += (w_lms_i[i]+waj_res_i[i])/sdvig;
     waj_res_i[i] = (w_lms_i[i]+waj_res_i[i])%sdvig;
 
-	w_aj_q[i] += (w_lms_q[i]+waj_res_q[i])/sdvig;
+    w_aj_q[i] += (w_lms_q[i]+waj_res_q[i])/sdvig;
     waj_res_q[i] = (w_lms_q[i]+waj_res_q[i])%sdvig;
-	/*
-    waj_res_i[i]+=w_lms_i[i]%sdvig;
-    waj_res_q[i]+=w_lms_q[i]%sdvig;
 
-    w_aj_i[i]+=w_lms_i[i]/sdvig;
-	w_aj_q[i]+=w_lms_q[i]/sdvig;
-    //учёт остатка от целочисленного деления
-	if(waj_res_i[i]>=sdvig || waj_res_i[i]<=-sdvig) {w_aj_i[i]+=waj_res_i[i]/(sdvig); waj_res_i[i]=0;}//-=(sdvig/4);}
-    if(waj_res_q[i]>=sdvig || waj_res_q[i]<=-sdvig) {w_aj_q[i]+=waj_res_q[i]/(sdvig); waj_res_q[i]=0;}//-=(sdvig/4);}
-	*/
-	if(w_aj_i[i]>1023 || w_aj_i[i]<-1024)
-    if(w_aj_i[i]>0) w_aj_i[i] = 1023; else w_aj_i[i] = -1024;
-	if(w_aj_q[i]>1023 || w_aj_q[i]<-1024)
-    if(w_aj_q[i]>0) w_aj_q[i] = 1023; else w_aj_q[i] = -1024;
+    if(w_aj_i[i]>1023 || w_aj_i[i]<-1024)
+    {
+        if(w_aj_i[i]>0) w_aj_i[i] = 1023; else w_aj_i[i] = -1024;
+    }
+    if(w_aj_q[i]>1023 || w_aj_q[i]<-1024)
+    {
+        if(w_aj_q[i]>0) w_aj_q[i] = 1023; else w_aj_q[i] = -1024;
+    }
    }
  r_i_s_46=r_i_s[46];
  r_q_s_46=r_q_s[46];
@@ -2813,7 +2659,7 @@ AGC::AGC()
     count_fix = 10;//14
     gain_coeff2 = 0;
     //filter_alpha = 0.002/8*66/10/16;// 10 - 1 KOm
-    filter_alpha = 1.0/(0.01e-6*4e3*200e6*2*pi);// 10 - 1 KOm filter_alpha = 1.0/(0.01e-6*4e3*60e6*2*pi);
+    filter_alpha = 1.0/(0.01e-6*4e3*200e6*pi_2);// 10 - 1 KOm filter_alpha = 1.0/(0.01e-6*4e3*60e6*pi_2);
 }
 AGC::~AGC()
 {
@@ -2825,7 +2671,7 @@ int AGC::GainCoefficient(short overflow_bit_in, short agc_mid_level_in, short ov
  if(overflow_bit>0)			//-17 - порог включения режима "помеха пропала" можно изменять -19...-10 (1,7%)
  {								//20 - означает 2% превышения верхнего уровня по модулю при подсчёте за 1000 тактов
   overflow_adc=overflow_percent-overflow_bit;//-2
-  gain_coeff+=overflow_adc*2;//*(-2)
+  gain_coeff+=overflow_adc*2;//(-2)
   count1=10;
   //cout<<overflow_bit<<endl;
  }
@@ -3385,7 +3231,6 @@ int AGC::GainCoefficient_CordicNew2(short overflow_bit_in, int agc_mid_level_pre
 
 int AGC::GainCoefficient_ALT4(short overflow_bit_in, int agc_mid_level_pre, long agc_mid_level_in, long ref_mid_level, int max_point)
 {//vivod2<<agc_mid_level<<endl;
-    double a = 1;
     double Dscr_out = 0;
 
     //double Dscr_filt_out_in = *Dscr_filt_out;
@@ -3558,89 +3403,4 @@ short AGC::AGC_second(int filtered_signal_I)
     //vivod2<<filtered_signal_I<<endl;
     //vivod3<<L1<<' '<<L2<<' '<<L3<<endl;
     return last_out;
-}
-
-L5_amp_ctrl::L5_amp_ctrl()
-{
- vivod1.open("data_out/f1.txt",ios::out);
- vivod2.open("data_out/f2.txt",ios::out);
- vivod3.open("data_out/f3.txt",ios::out);
-
- amp_coeff=2000;
- discrim=0;
-
- k_agc=1;
- pwm_count=0;
- pwm_out=0;
- pwm_filter_out=0;
- pwm_z=0;
- last_out=0;
- delay_mult=0;
- gain_mult=1;
- pwm_count_sec=0;
- pwm_number=0;
- pwm_remainder=0;
- pwm_number_2=0;
- pwm_remainder_2=0;
-}
-L5_amp_ctrl::~L5_amp_ctrl()
-{
-}
-//AGC (Вычисление коэффициента усиления входного сигнала)
-int L5_amp_ctrl::GainCoefficient(int L0_sum, int L5_sum)
-{
- L0_sum/=16384;
- L5_sum/=16384;
- discrim=L0_sum*2-L5_sum;
- amp_coeff+=(discrim/1);
-
- //if(amp_coeff<63) amp_coeff=63;
- //else if(amp_coeff>16240) amp_coeff=16240; //9600 - шир 6400 - узк
- //vivod1<<amp_coeff<<endl;
- return amp_coeff;
-}
-
-// PWM (ШИМ)
-//#define PWM_advanced 1 //Enable advanced PWM scheme
-//#define pwm_divide 16
-//#define pwm_period 160
-double L5_amp_ctrl::PWM(int agc_gain_coeff,short pwm_divide, short pwm_period)
-{
- //PWM algorithm
-#ifdef PWM_advanced
- pwm_number=((agc_gain_coeff>>2)/pwm_divide);
- pwm_remainder=((agc_gain_coeff>>2)%pwm_divide);
-
- //pwm_number_2=pwm_remainder/8;
- //pwm_remainder_2=pwm_remainder%8;
- //if(pwm_remainder<8) pwm_remainder_2=pwm_remainder;
- if(pwm_count==pwm_period/pwm_divide)
- {
-  pwm_count=0;
-  pwm_count_sec++;
- }
-
- //if(pwm_count_sec%2==0 && pwm_number_2==1) pwm_number+=1;
- //if(pwm_count_sec%2==0 && pwm_remainder_2*2>pwm_count_sec ) pwm_number+=1;
-
- if(pwm_remainder>pwm_count_sec)  pwm_number+=1;
- if(pwm_count_sec==pwm_divide) pwm_count_sec=0;
-
-#else
- if(pwm_count==pwm_period) pwm_count=0; //150 - шир 50 - узк
- pwm_number=((agc_gain_coeff>>6));
-#endif
- //vivod1<<pwm_number<<endl;
- //vivod2<<pwm_remainder<<endl;
- //vivod3<<(agc_gain_coeff>>6)<<endl;
- if(pwm_count<pwm_number) pwm_out=1; //6 - шир 7 - узк
- else pwm_out=0;
- pwm_count++;//pwm_out=1;
- //Smooth filter
- pwm_filter_out=pwm_z*0.999+double(pwm_out)*0.001; //(0.998 0.002) - для широкополосной фильтрации	(0.9994 0.0006) - для узкополосной
- pwm_z=pwm_filter_out;
- //Nonlinear transformer
- pwm_filter_out=pwm_filter_out*7;  //    (...)/4000 = (...)*5/20000
- //vivod2<<pwm_z<<endl;
- return pwm_filter_out;
 }

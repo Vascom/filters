@@ -21,23 +21,21 @@ Description: these classes contain interface data and methods for filter modelin
 #include <algorithm>
 #include <functional>
 #include <numeric>
+#include <iterator>
 #define V5_COMPAT
 
 using namespace std;
-//const double pi=3.14159265358979323846;//26433832795;
 const double pi=3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067;
-//const double pi=3.141592653589792;
 const double pi_2=6.283185307179586476925286766559;
 
 class Filter
 {
-    short *h1,*h1_pos,*h2,h2_dop,N1,N1_pos,N2,Nsat,i,sw1,N_aj,aj_delay,aj_d_delay,N_aj_adv,aj_delay_adv;
+    short *h1,*h1_pos,*h2,h2_dop,N1,N1_pos,N2,i,sw1,N_aj,aj_delay,aj_d_delay,N_aj_adv,aj_delay_adv;
     int p1,*input1_rev,*input1_rev_pos,*inputI,*inputI_pos,*input1_revH,*inputH,*inputAJ_rev,*inputAJ,*inputAJ2,yk,yk1,yk2,yk3,yk4,ykk,ykk1,ykk2,ykk3,ykk4,eps,eps1,eps2,eps3,eps4,eps5,mju,epss,epss1,epss2,epss3,epss4,epss5;
     short *w_aj,*w_aj_abs,*w_ajj,*w_aj1,*w_aj2,*w_aj11,*w_aj22;
     double *inputAJ_rev_d,eps_d,*inputAJ_d,yk_d,*w_aj_d,mju_d,aj_in_z,*input_delay_d;
     double *inputAJ_rev_d_cplx_i,*inputAJ_d_cplx_i,yk_d_cplx_i,*w_aj_d_cplx_i;
     double *inputAJ_rev_d_cplx_q,*inputAJ_d_cplx_q,yk_d_cplx_q,*w_aj_d_cplx_q,eps_d_cplx_i,eps_d_cplx_q;
-    double psat,*inputSat,*inputSat_rev,*hsat;
 
     short  Naj,Naj_delay;
     double aj_comb_d_i,aj_comb_d_q,rn,rnn[8];
@@ -124,8 +122,6 @@ public:
     int FirIpos(int,short,short);
     int FirIn(int,short,short);
     int FirH(int,short,short,short);
-    double SatFilter(double);
-    void LoadSatCoeff(short,char *);
     int CICFilter(int);
     short AGCMid(int, long long);
     int AGCMids(int,int,int,int, long long);
@@ -150,7 +146,6 @@ public:
     short AGCLocata(short, long long);
     short AGCSecondLocata(short, long long, short, short, double, short);
 
-	//double *FFTw(int[],int);
     int FFT(int[],int[],short);
     int FFTb(int,int,int,int, int,int);
     int GetFFT(short,short);
@@ -192,18 +187,4 @@ public:
     double DAC(int,short);
     double DACnew(int,short);
     short AGC_second(int);
-};
-
-class L5_amp_ctrl
-{
-    short a,count1,s_zero,gain_coeff_second,k_agc,pwm_count,pwm_out,last_out,delay_mult,gain_mult;
-    short pwm_count_sec,pwm_number,pwm_remainder,pwm_number_2,pwm_remainder_2;
-    int amp_coeff,discrim;
-    double pwm_filter_out,pwm_z;
-    public:
-    fstream vivod1,vivod2,vivod3;
-    L5_amp_ctrl();
-    ~L5_amp_ctrl();
-    int GainCoefficient(int,int);
-    double PWM(int,short,short);
 };

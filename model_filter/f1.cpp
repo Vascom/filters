@@ -22,36 +22,26 @@ for testing
 #define ca_p_code 1             // 1 - C/A, 10 - P
 #define pwm_dac 1               // 0 - PWM, 1 - DAC
 #define ajm_real 1              // 0 - complex, 1 - real
-//#define linux
+
 #define TRESHOLD_SWITCH_ALGORITHM 0
 #define LOCATA 0
 #define AVT2 0
 
-#define PI 3.1415926538
 #define V5_COMPAT
-//#define linux
-//#include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
-//#include <string.h>
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-#ifdef linux
-#include "slstrn.h"
-//#include "slrnrc.h"
-#include "slru.h"
-#else
-#include <slrn.h>
-#include <slrnrc.h>
-#include <slru.h>
-#endif
 #include <math.h>
 #include <algorithm>
 #include "class_Filter.h"
-//#include "class_ajm.h"
 
 using namespace std;
+
+double gaussian_noise( int max ) { 
+  return (rand() + rand() + rand() + rand() +
+        rand() + rand() + rand() + rand() +
+        rand() + rand() + rand() + rand() +
+        rand() + rand() + rand() + rand() ) / 16.0; 
+}
 
 double *FFTw( int *dIn, int nn )
 {
@@ -64,13 +54,9 @@ double *FFTw( int *dIn, int nn )
     for( i = 0; i < nn; i++ )
     {
         data[ i * 2 ] = 0;
-        data[ i * 2 + 1 ] = dIn[ i ]; //cout<<data[ i*2 ]<<' '<<data[ i*2+1 ]<<endl;
+        data[ i * 2 + 1 ] = dIn[ i ];
     }
-	data[512] = 0;
-for( short i = 0; i <= nn*2; i++ )
-    {
-        //cout<<i<<' '<<data[ i ]<<endl;
-    }
+    data[512] = 0;
     n = nn << 1;
     j = 1;
     i = 1;
@@ -88,28 +74,21 @@ for( short i = 0; i <= nn*2; i++ )
             m = m >> 1;
         }
         j = j + m;
-        i = i + 2;//cout<<i<<' '<<n<<' '<<data[ i ]<<endl;
+        i = i + 2;
     }
-	for( short i = 0; i <= nn*2; i++ )
-    {
-        //cout<<i<<' '<<data[ i ]<<endl;
-    }
-	
+
     mmax = 2;
     while( n > mmax )
     {
         istep = 2 * mmax;
-        theta = 2.0 * PI / ( isign * mmax );
+        theta = 2.0 * pi / ( isign * mmax );
         wtemp = sin( 0.5 * theta );
         wpr = -2.0 * wtemp * wtemp;
         wpi = sin( theta );
         wr = 1.0;
         wi = 0.0;
         m = 1;
-		for( short  i = 0; i < nn; i++ )
-    {
-        //cout<<istep<<' '<<theta<<' '<<wtemp<<' '<<wpr<<' ' <<wpi<<endl;
-    }
+
         while( m < mmax )
         {
             i = m;
@@ -121,9 +100,8 @@ for( short i = 0; i <= nn*2; i++ )
                 data[ j ] = data[ i ] - tempr;
                 data[ j + 1 ] = data[ i + 1 ] - tempi;
                 data[ i ] = data[ i ] + tempr;
-                data[ i + 1 ] = data[ i + 1 ] + tempi;//cout<<m<<' '<<i<<' '<<j<<' '<<data[ i ]<<' '<<data[ i+1 ]<<' '<<data[ j ]<<' '<<data[ j+1 ]<<' '<<tempr<<' '<<tempi<<endl;
+                data[ i + 1 ] = data[ i + 1 ] + tempi;
                 i = i + istep;
-				
             }
             wtemp = wr;
             wr = wtemp * wpr - wi * wpi + wr;
@@ -142,28 +120,21 @@ for( short i = 0; i <= nn*2; i++ )
     delete []data;
     return dOut;
 }
-// keep sign bits
-int keep_sign(int num, int width)
-{
-    for (int i = width; i < 32; i++){ num = (num | (((num >> (i-1)) & 0x1) << i)); }
-    return num;
-}
+
 //Generator E5aI PRN
 void GALE5aIgen(short *e5a)
 {
  short geng1[14]={1,1,1,1,1,1,1,1,1,1,1,1,1,1};
  short geng2[14]={0,1,1,0,1,1,0,0,1,0,1,0,1,0};
- short G=0,g1=0,g2=0,g1s=0,g2s=0,x=0;
+ short G=0,g1=0,g2=0,g1s=0,g2s=0;
  for(short n=0;n<10000;n++)
  {
   g1=geng1[13];
   g1s=geng1[0]^geng1[5]^geng1[7]^geng1[13];
-  //for(x=0;x<14;x++){geng1[14-1-x]=geng1[14-2-x];}
   rotate(&geng1[0], &geng1[13], &geng1[14]);
   geng1[0]=g1s;
   g2=geng2[13];
   g2s=geng2[3]^geng2[4]^geng2[6]^geng2[7]^geng2[11]^geng2[13];
-  //for(x=0;x<14;x++){geng2[14-1-x]=geng2[14-2-x];}
   rotate(&geng2[0], &geng2[13], &geng2[14]);
   geng2[0]=g2s;
   G=g1^g2;
@@ -176,17 +147,15 @@ void GALE5bIgen(short *e5b)
 {
  short geng1[14]={1,1,1,1,1,1,1,1,1,1,1,1,1,1};
  short geng2[14]={1,1,1,0,0,0,1,0,1,0,0,0,1,0};
- short G=0,g1=0,g2=0,g1s=0,g2s=0,x=0;
+ short G=0,g1=0,g2=0,g1s=0,g2s=0;
  for(short n=0;n<10000;n++)
  {
   g1=geng1[13];
   g1s=geng1[3]^geng1[10]^geng1[12]^geng1[13];
-  //for(x=0;x<14;x++){geng1[14-1-x]=geng1[14-2-x];}
   rotate(&geng1[0], &geng1[13], &geng1[14]);
   geng1[0]=g1s;
   g2=geng2[13];
   g2s=geng2[1]^geng2[4]^geng2[7]^geng2[8]^geng2[11]^geng2[13];
-  //for(x=0;x<14;x++){geng2[14-1-x]=geng2[14-2-x];}
   rotate(&geng2[0], &geng2[13], &geng2[14]);
   geng2[0]=g2s;
   G=g1^g2;
@@ -255,41 +224,6 @@ void InputPosled(short inp[])
  }
  input1.close();
 }
-void InputPosledGlo(short inp[])
-{
- ifstream input1;
- input1.open("data_in/glo_ca.txt");//("posl_1.txt");
- if(input1.fail())cout<<"file not open";
- for(short i=0;i<511;i++)
- {
-  input1>>inp[i];
- }
- input1.close();
-}
-
-void InputVerilogPosled(int inp[])
-{
- ifstream input1;
- input1.open("data_out/rf_in.txt");//("posl_1.txt");
- if(input1.fail())cout<<"file not open";
- for(short i=0;i<1700;i++)
- {
-  input1>>inp[i];
- }
- input1.close();
-}
-
-void InputVerilogPosled2(int inp[])
-{
- ifstream input1;
- input1.open("data_out/nco_out2.txt");//("posl_1.txt");
- if(input1.fail())cout<<"file not open";
- for(short i=0;i<1700;i++)
- {
-  input1>>inp[i];
- }
- input1.close();
-}
 
 void InputAVT2data(short inp[])
 {
@@ -302,46 +236,29 @@ void InputAVT2data(short inp[])
     }
     input1.close();
 }
-// cos generator
-//#define nco_bit_out 8
-short NCO_gen_cos(double freq, long long t)
-{
- //return short(floor(cos(double(t) * freq)*127 + 0.5));
- double phase = (((long long)floor(double(t) * freq / 2.0 / pi * 16384 + 0.5) % 16384) >> 4) * 2.0 * pi / 1024.0;
- if (((cos(phase) * sin(phase)) >= 0) & ((cos(phase + 2.0 * pi / 1024.0)  * sin(phase + 2.0 * pi / 1024.0)) >= 0)) {phase += 2.0 * pi / 1024.0;}
- return short(floor(cos(phase)*127 + 0.5));
-}
+
 short NCO_gen_cos_phase(double freq, double phase_in, long long t)
 {
-	return short(floor(cos(double(t) * freq + phase_in)*127 + 0.5));
- double phase = (((long long)floor(double(t) * freq / 2.0 / pi * 16384 + 0.5) % 16384) >> 4) * 2.0 * pi / 1024.0+phase_in;
- if (((cos(phase) * sin(phase)) >= 0) & ((cos(phase + 2.0 * pi / 1024.0)  * sin(phase + 2.0 * pi / 1024.0)) >= 0)) {phase += 2.0 * pi / 1024.0;}
- return short(floor(cos(phase)*127 + 0.5));
+    return short(floor(cos(double(t) * freq + phase_in)*127 + 0.5));
+ //double phase = (((long long)floor(double(t) * freq / 2.0 / pi * 16384 + 0.5) % 16384) >> 4) * 2.0 * pi / 1024.0+phase_in;
+ //if (((cos(phase) * sin(phase)) >= 0) & ((cos(phase + 2.0 * pi / 1024.0)  * sin(phase + 2.0 * pi / 1024.0)) >= 0)) {phase += 2.0 * pi / 1024.0;}
+ //return short(floor(cos(phase)*127 + 0.5));
 }
 short NCO_gen_sin_phase(double freq, double phase_in, long long t)
 {
-	return short(floor(sin(double(t) * freq + phase_in)*127 + 0.5));
- double phase = (((long long)floor(double(t) * freq / 2.0 / pi * 16384 + 0.5) % 16384) >> 4) * 2.0 * pi / 1024.0 + phase_in;
- if (((cos(phase) * sin(phase)) <= 0) & ((cos(phase + 2.0 * pi / 1024.0)  * sin(phase + 2.0 * pi / 1024.0)) <= 0)) {phase += 2.0 * pi / 1024.0;}
- return short(floor(sin(phase)*127 + 0.5));
-}
-// sin generator
-short NCO_gen_sin(double freq, long long t)
-{
-    return short(floor(sin(double(t) * freq)*127 + 0.5));
- double phase = (((long long)floor(double(t) * freq / 2.0 / pi * 16384 + 0.5) % 16384) >> 4) * 2.0 * pi / 1024.0;
- if (((cos(phase) * sin(phase)) <= 0) & ((cos(phase + 2.0 * pi / 1024.0)  * sin(phase + 2.0 * pi / 1024.0)) <= 0)) {phase += 2.0 * pi / 1024.0;}
- return short(floor(sin(phase)*127 + 0.5));
+    return short(floor(sin(double(t) * freq + phase_in)*127 + 0.5));
+ //double phase = (((long long)floor(double(t) * freq / 2.0 / pi * 16384 + 0.5) % 16384) >> 4) * 2.0 * pi / 1024.0 + phase_in;
+ //if (((cos(phase) * sin(phase)) <= 0) & ((cos(phase + 2.0 * pi / 1024.0)  * sin(phase + 2.0 * pi / 1024.0)) <= 0)) {phase += 2.0 * pi / 1024.0;}
+ //return short(floor(sin(phase)*127 + 0.5));
 }
 
 
 //! Main program
 
-int main(int argc, char *argv[]){//cout<<argc<<endl;
-//printf("%s", argv[1]);
+int main(int argc, char *argv[]){
 short z=0;
 ofstream norm, str, viv, viv2;
-ofstream test_out_0,test_out_1,test_out_2,test_out_4,test_out_5,test_out_6,test_out_7,test_out_8,test_out_9,test_out_dbg_0;
+ofstream test_out_0,test_out_1,test_out_2,test_out_4,test_out_5,test_out_6,test_out_7,test_out_8,test_out_9;
 norm.open("data_out/norm.txt");//,ios::app
 str.open("data_out/str.txt");
 viv.open("data_out/viv.txt");
@@ -357,8 +274,7 @@ test_out_6.open("data_out/test_out_6.txt");
 test_out_7.open("data_out/test_out_7.txt");
 test_out_8.open("data_out/test_out_8.txt");
 test_out_9.open("data_out/test_out_9.txt");
-test_out_dbg_0.open("data_out/test_out_dbg_0.txt");
-//test_out_dbg_1.open("data_out/test_out_dbg_1.txt");
+
 double fr0 = 0, fr1 = 0, fr;
 cout<<"Enter fr: ";
 //cin>>fr;
@@ -368,43 +284,13 @@ fr1 = fr0+3.5;
 
 short input_bw = short(fr);
 short input_mult = 1<<(short(fr)-input_bw);
-short lms_period = 64;
-short filter_length = 64;
-double JA = 0;
 int parameter_0 = 4096;//32768;//256;
 int parameter_1 = 131072;
 //short agc_algorithm = 5;
 short params_file_number = 0;
-int* max_point = 0;
-int max_point_value = 0;
 int del_filt = 0;
 short k_cordic = 2;
-/*
-for(short s = 0;s<64;s++)
-{
-    short f1 = s/2-s/8;
-    short f2 = s/2-s/8;
-    short f3_pre_1 = (s>>2)&0x1 && !(s&0x1);
-    short f3_pre_2 = !((s>>2)&0x1) && s&0x1;
-    short f3 = 0;
-    if(f3_pre_1) f3 = s/4 - 1;
-    else
-        if(f3_pre_2) f3 = s/4 + 1;
-        else f3 = s/4;
-    cout<<s<<' '<<s-(f1+f2+f3)<<' '<<f1<<' '<<f2<<' '<<f3<<endl;
-}
-*/
-/*
-for(short s = 0;s<64;s++)
-{
-    short f1 = s*3/8;
-    short f2 = s*3/8;
-    //short f3_pre_1 = (s>>2)&0x1 && !(s&0x1);
-    //short f3_pre_2 = !((s>>2)&0x1) && s&0x1;
-    short f3 = s*2/8+((((((s*3)<<1)&0x3)+((s*2)&0x3))>>2)&0x3);
-        cout<<s<<' '<<s-(f1+f2+f3)<<' '<<f1<<' '<<f2<<' '<<f3<<endl;
-}
-*/
+
 for(short s = 0;s<128;s++)
 {
     short f = ((s<<1) + (s<<2) + (s<<4))>>6;
@@ -423,38 +309,7 @@ for(short s = 0;s<128;s++)
         */
     cout<<s<<' '<<f<<' '<<' '<<f1<<' '<<f2<<' '<<f3<<' '<<s-(f1+f2+f3)<<' '<<err<<endl;
 }
-/*
-for(short s = 0;s<64;s++)
-{
-    short f1 = s/4+s/16+((s>>3)&0x1);
-    short f2 = s/4+s/16+(s&0x3);
-    //short f3_pre_1 = (s>>2)&0x1 && !(s&0x1);
-    //short f3_pre_2 = !((s>>2)&0x1) && s&0x1;
-    short f3 = s/4+s/8+((s>>2)&0x1);
-    //if(f3_pre_1) f3 = s/4 - 1;
-   // else
-     //   if(f3_pre_2) f3 = s/4 + 1;
-        //else
-            //f3 = s/4+s/8;
-        cout<<s<<' '<<s-(f1+f2+f3)<<' '<<f1<<' '<<f2<<' '<<f3<<' '<<s%16<<endl;
-}
-*/
-/*
-for(short s = 0;s<64;s++)
-{
-    short f1 = s/4;
-    short f2 = s/4+s/8;
-    //short f3_pre_1 = (s>>2)&0x1 && !(s&0x1);
-    //short f3_pre_2 = !((s>>2)&0x1) && s&0x1;
-    short f3 = s/4+s/8;
-    //if(f3_pre_1) f3 = s/4 - 1;
-    // else
-    //   if(f3_pre_2) f3 = s/4 + 1;
-    //else
-    //f3 = s/4+s/8;
-    cout<<s<<' '<<s-(f1+f2+f3)<<' '<<f1<<' '<<f2<<' '<<f3<<' '<<s%16<<endl;
-}
-*/
+
 double locata_pot_pre = 6;
 short pos_filt_en = 0;
 double k_cycle = 0;
@@ -470,19 +325,13 @@ short fil_pos_number = 2;
     double locata_pot = locata_pot_pre*20;
     //if (parameter_0==65536) agc_algorithm = 0;
     //else agc_algorithm = 1;
-    //int tty1=-799;
-    //int tty2=799;
-    //cout<<tty1/8<<' '<<tty2/8<<' '<<(tty1>>3)<<' '<<(tty2>>3)<<endl;
-    short tf=0, j=0, k=0, l=0, l1=0, l2=0, filter_delay=0, kk=0;
-    int input_signal=0, input_signal2=0, base_cosine=0, base_sine=0, gln_opc=0,gln_ops=0, inp_prn_ajm[6000], inp_prn_ajm2[6000];
-    int complex_signal_i_L5=0, complex_signal_q_L5=0,base_cosine_L5=0, base_sine_L5=0;
-    short aj_i_0=0,aj_i_1=0,aj_q_0=0,aj_q_1=0;
-    short  sts=0, stc=0, ct=0, sign_cosine=1, sign_sine=1,outre=0, outim=0, max_coeff=0;
-    short *outp1=NULL, *outp2=NULL, sign_cosine_semicycle=3, inp_prn[1023], inp_prn_glo[511], *e5a=NULL, *e5b=NULL;
-    short f_sec_agc=0,f_sec_agc_tr=0,f_sec_agc_tr2=0,f_sec_agc_q=0,f_sec_agc_tr_q=0,f_sec_agc_tr2_q=0;
+    short k=0, filter_delay=0, kk=0;
+    int input_signal=0, base_cosine=0, base_sine=0, inp_prn_ajm[6000], inp_prn_ajm2[6000];
+    short  sts=0, stc=0, ct=0;
+    short *outp1=NULL, *outp2=NULL, inp_prn[1023], *e5a=NULL, *e5b=NULL;
     int complex_signal_i=0, complex_signal_q=0;
     long long loe=0;
-    int v=0, tt=0, outm=0, outm2=0;
+    int v=0, outm=0, outm2=0;
 #if adc_agc_mode==0
     short sampling_frequency=200;
 #else
@@ -493,7 +342,6 @@ short fil_pos_number = 2;
 #endif
     double sampling_interval=1/(sampling_frequency*1e6), sh1=1, sh2=1, sh=1;
     double *nmetod1=NULL, *nmetod2=NULL;
-    char *f1=NULL, *f2=NULL;
     nmetod1=new double[24000];
     nmetod2=new double[24000];
     const short input_sh_delay=2000;
@@ -507,63 +355,26 @@ short fil_pos_number = 2;
         outp2[g]=0;
     }
     //copy(&outp1[0], &outp1[64], ostream_iterator<short>(cout, " "));
-    f1=new char[30];
-    f2=new char[30];
-    StNormDev gaussian_noise, code, L5_noise, locata_RF_noise, test0, test1;
-    double signal_amplitude=0;//0.1;//0.0707;//0.0577;
+    //!!StNormDev gaussian_noise, code, locata_RF_noise, test0, test1;
+    double signal_amplitude=0;
     GALE5aIgen(e5a);
     GALE5bIgen(e5b);
-LB1:
-    l1=22;//cin>>l1;//l1=12
-    l2=12;//cin>>l2;
-    j=10;//cin>>j;
+
     long pulse_width = 0;
     cout<<"Filter length: 64 "<<endl;
     cout<<"Enter pulse width: ";
     //cin>>pulse_width;
-    l = 21;
     short switch_filter_use=1;
-    f2="data_in/f10_2_60.fcf";
-    switch(l)
-    {
-        case 0: f1="data_in/f10_1_180_new.fcf"; f2="data_in/f10_2_60_new.fcf"; l1=26; filter_delay=0; switch_filter_use=0; break;
-        case 1: f1="data_in/f10_01_150.fcf"; f2="data_in/f10_02_50.fcf"; l1=12; l2=23; filter_delay=27; switch_filter_use=1; break;
-        case 2: f1="data_in/f20_1_150.fcf"; f2="data_in/f20_2_50.fcf"; l1=22; l2=22; filter_delay=29; switch_filter_use=1; break;
-        case 3: f1="data_in/f45_06.fcf"; f2="data_in/f10_02_50.fcf"; l1=26; l2=23; filter_delay=13; switch_filter_use=1; break;
-        case 4: f1="data_in/f45_04.fcf"; l1=26; filter_delay=13; break;
-        case 5: f1="data_in/f45_05.fcf"; l1=21; filter_delay=10; break;
-        case 6: f1="data_in/f20_1.fcf"; f2="data_in/f20_2.fcf"; l1=22; l2=22; filter_delay=29; switch_filter_use=1; break;
-        case 7: f1="data_in/f10_1_180.fcf"; f2="data_in/f10_2_60.fcf"; l1=12; l2=23; filter_delay=27; switch_filter_use=1; break;
-        case 8: f1="data_in/f45_08.fcf"; l1=11; filter_delay=5; break;
-        case 9: f1="data_in/f45_09.fcf"; l1=11; filter_delay=5; break;
-        case 10: f1="data_in/f45_10.fcf"; l1=4; filter_delay=2; break;
-        case 11: f1="data_in/f45_11.fcf"; l1=2; filter_delay=1; break;
-        case 12: f1="data_in/f45_12.fcf"; l1=4; filter_delay=2; break;
-        case 13: f1="data_in/f12_1_180.fcf"; f2="data_in/f12_2_60.fcf"; l1=16; l2=23; filter_delay=28; switch_filter_use=1; break;
-        case 14: f1="data_in/f10_1_180_new.fcf"; f2="data_in/f10_2_60_new.fcf"; l1=10; l2=18; filter_delay=21; switch_filter_use=1; break;
-        case 15: f1="data_in/f20_1_180_new.fcf"; f2="data_in/f20_2_60_new.fcf"; l1=19; l2=18; filter_delay=24; switch_filter_use=1; break;
-        case 16: f1="data_in/f12_1_180_new.fcf"; f2="data_in/f12_2_60_new.fcf"; l1=11; l2=20; filter_delay=24; switch_filter_use=1; break;
-        case 20: f1="data_in/f45_12.fcf"; f2="data_in/f12_2_60_new.fcf"; l1=20; l2=20; filter_delay=20; switch_filter_use=2; break;
-        //case 21: f1="data_in/equalizing_180_10_v03.fcf"; f2="data_in/equalizing_27_v.fcf";max_coeff=2;l1=20;filter_delay=23*1+0; switch_filter_use=2; break;
-        //! For filt_div = 8 : filter_delay = 265
-        //! For filt_div = 8 : filter_delay = 425 new real signal
-        case 21:    f1="data_in/equalizing_180_10_v04_80.fcf";
-                    f2="data_in/equalizing_27_v.fcf";
-                    max_coeff=2;l1=20;
-                    #if ajm_real==1
-                    filter_delay=420 + 5-8 +8 -4 + 8 -232 -0 +64+16       +fil_pos_length*4*pos_filt_en*fil_pos_number;//-80
-                    #else
-                    filter_delay=265;//-80
-                    #endif
-                    //filter_delay=0;//-4
-                    switch_filter_use=2;
-                    break;
-        //case 21: f1="data_in/equalizing_180_20_v01.fcf"; f2="data_in/equalizing_27_v.fcf";max_coeff=2;l1=20;filter_delay=22*1+0; switch_filter_use=2; break;
-        //case 21: f1="data_in/equalizing_180_10_v05_97.fcf"; f2="data_in/equalizing_27_v.fcf";max_coeff=2;l1=20;filter_delay=25*1+0; switch_filter_use=2; break;
-        default: cout<<" this filter does not exist!"<<endl; goto LB1;												//22+64	//8	//256
-    }
-    double jam_amplitude,jam_frequency_offset;
-    short jam_on;
+    //! For filt_div = 8 : filter_delay = 265
+    //! For filt_div = 8 : filter_delay = 425 new real signal
+    #if ajm_real==1
+    filter_delay=420 + 5-8 +8 -4 + 8 -232 -0 +64+16       +fil_pos_length*4*pos_filt_en*fil_pos_number;//-80
+    #else
+    filter_delay=265;//-80
+    #endif
+    //filter_delay=0;//-4
+    switch_filter_use=2;
+
     short cic_del_m[6] = {0,0,0,0,0,0};
     short nco_freq = 0; //7281
     short filt_cic_out_shift,mid_agc_lev_n,mid_agc_lev_p,mid_agc_count_n,mid_agc_count_p,mid_agc_man,lms_mju;
@@ -624,7 +435,7 @@ LB1:
             default:   config = fopen( "fparams.txt", "r+" ); break;
         }
     else config = fopen( argv[1], "r+" );
-    //config = fopen( "fscanf.txt", "r+" );
+
     #if ajm_real==0
     config = fopen( "fparamsc.txt", "r+" );
     #endif
@@ -715,19 +526,10 @@ LB1:
     }
     //jamming_amplitude = jamming_amplitude * pow(1.7783,k_cycle);
     //! Maiking classes for filters and filters initialization
-    Filter Flt,Flt_Q;//,Flt_L5,Flt_L5_Q;
-    Filter FltPos,FltPos2,FltPos_Q,FltPos2_Q;
+    Filter Flt,Flt_Q;
+    Filter FltPos,FltPos2;//,FltPos_Q,FltPos2_Q;
     AGC inp_agc;
-    //L5_amp_ctrl gain_L5;
-    double *hsat,*hsat2;
-    short lsat=90,lsat2=90;
-    hsat=new double[lsat];
-    hsat2=new double[lsat2];
 
-    //lms_mju = 5;
-    cout<<"................."<<endl;
-    cout<<5/2<<' '<<-5/2<<endl;
-    //f1="data_in/equalizing_180_20_v01.fcf";
     Flt.LoadCoeff(switch_filter_use,cic_del_m,filt_cic_out_shift,mid_agc_lev_n,mid_agc_lev_p,
                   mid_agc_count_n,mid_agc_count_p,mid_agc_man,lms_mju,h1,h2,h_pos);
     Flt_Q.LoadCoeff(switch_filter_use,cic_del_m,filt_cic_out_shift,mid_agc_lev_n,mid_agc_lev_p,
@@ -740,19 +542,9 @@ LB1:
                   mid_agc_count_n,mid_agc_count_p,mid_agc_man,lms_mju,h3,h2);
     FltPos2_Q.LoadCoeff(switch_filter_use,cic_del_m,filt_cic_out_shift,mid_agc_lev_n,mid_agc_lev_p,
                   mid_agc_count_n,mid_agc_count_p,mid_agc_man,lms_mju,h3,h2);*/
-    f1="data_in/equalizing_180_aj_v01.fcf";//f1="data_in/equalizing_180_12.5_v02.fcf";
-    max_coeff=1;
-    UnifDev jaja(1,80), locata_sh(-1,1), locata_amp_jump(8,16);
-    int point[80];
-    for(int i=1; i<=80; i++)
-    {
-        LB_POINT:
-        point[i-1]=int(jaja.RandValue());
-        for(int j=2; j<i; j++) if(point[i-1]==point[j-1]) goto LB_POINT;
-    }
+    //!!UnifDev jaja(1,80), locata_sh(-1,1), locata_amp_jump(8,16);
     InputPosled(inp_prn);
     Flt.LoadAJFilter(80,255,short(6+4+0), 10);
-    lms_period = 5;
     Flt_Q.LoadAJFilter(80,255,short(6+4+0), 10);
 
 #if adc_agc_mode==0
@@ -779,25 +571,21 @@ LB1:
     jamming_frequency_9=(carrier_frequency_pre+jamming_frequency_9)*1e6*2*pi*sampling_interval;
     jamming_frequency_10=(carrier_frequency_pre+jamming_frequency_10)*1e6*2*pi*sampling_interval;
 
-    double w=124.58;
-
     double pomeha=0;
 
-    tt=0;outm=0;outm2=0;sts=0;stc=0;kk=0;v=0;ct=0;sign_cosine=1;sign_sine=1;
-    sign_cosine_semicycle=sampling_frequency/60;
+    outm=0;outm2=0;sts=0;stc=0;kk=0;v=0;ct=0;
     for(short g=0;g<input_sh_delay;g++)
     {
         outp1[g]=0;
         outp2[g]=0;
     }
     const short correlate_offset=50;
-    //loe=(((100+correlate_offset)*1000)*sampling_frequency+1);//loe=50000;//21600000001
     loe=log_length;
 
     sh1=double(e5a[kk]+e5b[kk]);
     sh2=double(e5a[kk]-e5b[kk]);
     sh=1;
-    double d_input_signal=0, d_sat_signal=0, L5_amp=0;
+    double d_input_signal=0;
     short jamming_situation=0;
     if (jam_pulse_on==1) jamming_situation=5;
 
@@ -805,91 +593,29 @@ LB1:
     cout << "nco_carr_frec: " << nco_carr_frec <<endl;
     cout << "jamming_frequency: " << jamming_frequency <<endl;
 
-
     cout << "jam_pulse_on: " << jam_pulse_on << endl;
     cout << "--jamming_situation: " << jamming_situation << endl;
 
     cout << "jam_am_on: " << jam_am_on << endl;
     cout << "jam_fm_on: " << jam_fm_on << endl;
 
-    int outren=0,outimn=0,outren_d=0,outimn_d=0,outren_L5=0,outimn_L5=0;
-    tt=0;outm=0;outm2=0;sts=0;stc=0;kk=0;v=0;ct=0;sign_cosine=1;sign_sine=1;
-    sign_cosine_semicycle=sampling_frequency/60;
+    int outren=0,outimn=0,outren_d=0,outimn_d=0;
+    outm=0;outm2=0;sts=0;stc=0;kk=0;v=0;ct=0;
     int adc_of_bit=0, agc_mid_level=0, adc_high_bit=0, adc_low_bit=0;
-    int adc_of_bitp=0, adc_high_bitp=0, adc_low_bitp=0;
-    int adc_of_bitn=0, adc_high_bitn=0, adc_low_bitn=0;
     long ref_mid_level=320*512; //vk
     k_cordic = 2;
-    int jam_detector=0;
-    long agc_mid_level_av=0;
-    short adc_of_bit_av=0;
-    short adc_high_bit_av=0;
-    short adc_low_bit_av=0;
-    short adc_of_bit_av_temp=0;
-    short adc_low_bit_av_temp=0;
-    short adc_high_bit_av_temp=0;
-
-    short input_signal_tr_temp[1024];
-    short input_signal_tr_temp2[1024];
-    short input_signal_tr_temp3[1024];
-    short input_signal_tr_temp4[1024];
-    for(short i=0; i<1024; i++)
-    {
-        input_signal_tr_temp[i]=0;
-        input_signal_tr_temp2[i]=0;
-        input_signal_tr_temp3[i]=0;
-        input_signal_tr_temp4[i]=0;
-    }
-
-    int input_signal_mem[128];
-    short input_signal_tr_1[128];
-    short input_signal_tr_2[128];
-    short input_signal_tr_3[128];
-    short input_signal_tr_4[128];
-    for(int i=0; i<128; i++)
-    {
-        input_signal_mem[i]=0;
-        input_signal_tr_1[i]=0;
-        input_signal_tr_2[i]=0;
-        input_signal_tr_3[i]=0;
-        input_signal_tr_4[i]=0;
-    }
 
     int agc_out=0;
-    int sum_out_fir=0, sum_out_fir_L5=0, L5_agc_out=0;
     double real_gain_coeff=1,pomeha_FM=0,pomeha_AM=0;
-    StNormDev imp_jam_amp; //0,20,40,...,600
-    UnifDev imp_jam_dur(-1,1); //20mks-200mks
-    StUnifDev4::SetKernel(35189);
-    int imp_jam_d=int(imp_jam_dur.RandValue()), imp_jam_count=0;
-    double imp_jam_a=floor(abs(imp_jam_amp.RandValue()))*20, gaussian_noise_2=0;
-    //int pulse_period=100;
-    //int pulse width=20;
-    int spectr_an_outre=0,spectr_an_outim=0,sa_outren=0,sa_outimn=0;
-    short spectran_cnt1 = 0;
-    short spectran_cnt2 = 0;
-    int spectran_sum[512], spectran_sum_av = 0, sa_y = 0, sa_y1 = 4095, sa_max = 0, sa_min = 0;
-    for(short g=0;g<512;g++) spectran_sum[g] = 0;
+    //!!StNormDev imp_jam_amp; //0,20,40,...,600
+    //UnifDev imp_jam_dur(-1,1); //20mks-200mks
+    //StUnifDev4::SetKernel(35189);
+    //int imp_jam_d=int(imp_jam_dur.RandValue()), imp_jam_count=0;
+    //double imp_jam_a=floor(fabs(imp_jam_amp.RandValue()))*20, gaussian_noise_2=0;
 
-    short complex_signal_i_i=32;
     short k_agc_deay[3]={0,0,0};
-    short sh_fm = 0;
-    short sinc_inp_i[18],sinc_inp_q[18];
-    short sinc_inp_si=0,sinc_inp_sq=0;
-    for(short g=0;g<18;g++)
-    {
-        sinc_inp_i[g]=0;
-        sinc_inp_q[g]=0;
-    }
-    short aj_in_on=0;
-    short sig_en = 1;
-    double phase_in = 0;
-    double jamm_noise_comp = 1;
-    double jnc_discr = 0.5;
     short input_max = 1<<(input_bw-1);
-    int sec_agc_sum = 1, sec_agc_sum_pre = 1;
-    short f_sec_agc_old = 0;
-    f_sec_agc=0,f_sec_agc_tr=0,f_sec_agc_tr2=0,f_sec_agc_q=0,f_sec_agc_tr_q=0,f_sec_agc_tr2_q=0;
+
     //! Delays for bit true correspondence to verilog
     int delay_line_inp[64];
     int delay_line_cos[64];
@@ -935,27 +661,8 @@ LB1:
     int sin_tmp = 0;
     int inp_tmp = 0;
 
-    int d_x = 0;
-    double int_d_x = 0;
-    double int_d_x2 = 0;
-    int int_d_x_pre = 0;
-    int outren_pre = 0;
-    int outren_pre2 = 0;
-    int outren_pre3 = 0;
-    int outren_pre4 = 0;
-    int slow_mode = 0;
-    int slow_mode_cnt = 0;
     int t_freq_move = 0;
     int t_freq_move_fast = 0;
-
-    double PLL_BW = 3.5e5;
-    double Alpha = 2*PLL_BW;
-    double Beta = Alpha*PLL_BW*double(sampling_interval)/0.6*8;
-    double Gamma = PLL_BW/2.4*double(sampling_interval)*8;
-    double Discr = 0;
-    double PLLOut = 0;
-    double Sum1 = 0;
-    double Sum2 = 0;
 
     Flt.NCO(nco_freq,0);
     input_signal=0;
@@ -981,7 +688,6 @@ LB1:
         double locata_in = 0;
         short locata_in_dig = 0;
     #endif
-    double lfm = 1;
     short *avt2_data = NULL;
     avt2_data = new short[65536];
     InputAVT2data(avt2_data);
@@ -991,9 +697,7 @@ LB1:
     int aj_coeff_sum_0 = 0;
     int aj_coeff_sum_1 = 0;
     short abs_outren_0 = 0;
-    short abs_outren_pre_0 = 0;
     short abs_outren_1 = 0;
-    short abs_outren_pre_1 = 0;
     short w_aj_abs_max_0 = 0;
     short w_aj_abs_max_1 = 0;
 
@@ -1007,127 +711,19 @@ LB1:
     short jam_first_thr_1 = 0;
     short jam_exist_0 = 0;
     short jam_exist_1 = 0;
-    //for(long cort = 1; cort<=2048*1024; cort++)
-        //norm<<inp_agc.Cordic_log2(555)<<endl;
-    //cin>>new_chip;
+
     short Nfft = 64;
-    int a_fft[64],b_fft[64];
-     //Initialising
-    /*a_fft[0]  =    -89;
-    a_fft[1]  =     22;
-    a_fft[2]  =    226;
-    a_fft[3]  =    -58;
-    a_fft[4]  =    252;
-    a_fft[5]  =     95;
-    a_fft[6]  =    235;
-    a_fft[7]  =     25;
-    a_fft[8]  =   -131;
-    a_fft[9]  =   -296;
-    a_fft[10] =     31;
-    a_fft[11] =    164;
-    a_fft[12] =    -59;
-    a_fft[13] =   -108;
-    a_fft[14] =    -62;
-    a_fft[15] =   -219;
-    a_fft[16] =    -99;
-    a_fft[17] =    -36;
-    a_fft[18] =      9;
-    a_fft[19] =    -13;
-    a_fft[20] =    122;
-    a_fft[21] =     22;
-    a_fft[22] =    363;
-    a_fft[23] =     62;
-    a_fft[24] =    361;
-    a_fft[25] =   -145;
-    a_fft[26] =    105;
-    a_fft[27] =    -52;
-    a_fft[28] =    120;
-    a_fft[29] =    119;
-    a_fft[30] =   -437;
-    a_fft[31] =   -265;
-    a_fft[32] =   -288;
-    a_fft[33] =     80;
-    a_fft[34] =    294;
-    a_fft[35] =    -65;
-    a_fft[36] =    162;
-    a_fft[37] =    109;
-    a_fft[38] =   -210;
-    a_fft[39] =     79;
-    a_fft[40] =   -150;
-    a_fft[41] =    303;
-    a_fft[42] =     -7;
-    a_fft[43] =    327;
-    a_fft[44] =    -85;
-    a_fft[45] =    118;
-    a_fft[46] =    -13;
-    a_fft[47] =   -404;
-    a_fft[48] =   -196;
-    a_fft[49] =    123;
-    a_fft[50] =    -11;
-    a_fft[51] =   -224;
-    a_fft[52] =   -125;
-    a_fft[53] =     50;
-    a_fft[54] =   -199;
-    a_fft[55] =    195;
-    a_fft[56] =   -128;
-    a_fft[57] =    362;
-    a_fft[58] =   -216;
-    a_fft[59] =     40;
-    a_fft[60] =   -304;
-    a_fft[61] =   -145;
-    a_fft[62] =   -119;
-    a_fft[63] =     80;
-*/
-    for(short i = 0; i < Nfft; i++) a_fft[i] = 0;
-    for(short i = 0; i < Nfft; i++) b_fft[i] = 0;
-    int *fft_data_in = NULL;
     int *fft_data0 = NULL;
     int *fft_data1 = NULL;
-    short *fft_filt = NULL;
-    fft_data_in = new int[Nfft];
     fft_data0 = new int[Nfft];
     fft_data1 = new int[Nfft];
-    fft_filt = new short[Nfft];
     for(short i = 0; i < Nfft; i++) fft_data0[i] = 0;
     for(short i = 0; i < Nfft; i++) fft_data1[i] = 0;
-    /*Flt.FFT(a_fft,b_fft,Nfft);
-    for(short i=0;i<Nfft;i++)
-    {
-        //cout<<Flt.GetFFT(i,0)<<' '<<Flt.GetFFT(i,1)<<endl;
-        viv2<<a_fft[i]<<' '<<b_fft[i]<<endl;
-        norm<<Flt.GetFFT(i,0)<<' '<<Flt.GetFFT(i,1)<<endl;
-        fft_data0[i] = Flt.GetFFT(i,0);
-        fft_data1[i] = Flt.GetFFT(i,1);
-        a_fft[i] = Flt.GetFFT(i,0);
-        b_fft[i] = Flt.GetFFT(i,1);
-        if(i==15  || i==49) fft_filt[i] = 0;
-        else fft_filt[i] = 1;
-    }
-    for(short i=0;i<Nfft;i++)
-    {
-        fft_data0[i] = fft_data0[i] * fft_filt[i];
-        fft_data1[i] = fft_data1[i] * fft_filt[i];
-        str<<fft_data0[i]<<' '<<fft_data1[i]<<endl;
-        a_fft[i] = fft_data0[i];
-        b_fft[i] = fft_data1[i];
-    }
-    Flt.FFT(b_fft,a_fft,Nfft);
-    for(short i=0;i<Nfft;i++)
-    {
-        //cout<<Flt.GetFFT(i,0)<<' '<<Flt.GetFFT(i,1)<<endl;
-        viv<<Flt.GetFFT(i,0)<<' '<<Flt.GetFFT(i,1)<<endl;
-        fft_data0[i] = Flt.GetFFT(i,0);
-        fft_data1[i] = Flt.GetFFT(i,1);
-        a_fft[i] = Flt.GetFFT(i,0);
-        b_fft[i] = Flt.GetFFT(i,1);
-        if(i>15 && i==16) fft_filt[i] = 0;
-        else fft_filt[i] = 1;
-    }
-    cin>>new_chip;*/
-	int *fft_in;
-	fft_in = new int[512];
+
+    int *fft_in;
+    fft_in = new int[512];
     double *fft_out;
-	fft_out = new double[512];
+    fft_out = new double[512];
     //! Main cycle start
     cout<<loe<<endl;
     for(long long t=0;t<loe;t++) //116000000
@@ -1169,9 +765,9 @@ LB1:
         else if(ca_p_code==10)
             if(new_chip)
             {
-                sh=code.RandValue();
-                if(sh>0)sh=1;
-                else sh=-1;
+                sh = double(rand());
+                if((sh)>0)sh = 1;
+                else sh = -1;             
             }
         //!LOCATA code generator
         //if(t==1)code_shift = 8600000*200*1;
@@ -1200,25 +796,15 @@ LB1:
         else if(ca_p_code==10)
             if(new_chip2)
             {
-                sh2=code.RandValue();
-                if(sh2>0)sh2=1;
-                else sh2=-1;
+                sh2=double(rand());
+                if(sh2>0) sh2 = 1;
+                else sh2 = -1;
             }
         #if LOCATA==0
         //! Jamming situation setting
         switch(jamming_situation)
         {
             case 0: jamming_frequency=jamming_frequency + 0*4*0.25*0.125*1e0*2*pi*sampling_interval;
-                    //if(lfm==0) lfm = -1;
-                    //if(jamming_frequency>(150e6*2*pi*sampling_interval) && lfm==1) lfm = 0;
-                    /*if(jamming_frequency>=(150e6*2*pi*sampling_interval) && lfm==1)
-                    {
-                        //jamming_frequency = 150e6*2*pi*sampling_interval;
-                        lfm = -1;
-                        //jamming_frequency += 4*0.25*0.125*1e0*2*pi*sampling_interval*t;
-                        //t = -1;
-                    }*/
-                    //if(jamming_frequency>(143.58e6*2*pi*sampling_interval)) lfm = 1;
                         break;
             case 1: if (t>200000) {jamming_amplitude=50;}if (t>400000) jamming_amplitude=0;
                     if (t>600000) jamming_amplitude=50;
@@ -1230,23 +816,23 @@ LB1:
             case 5: if ((t - pulse_width)%jam_pulse_width==0 && t>0) jamming_amplitude=0;
                     if(t%jam_pulse_period==0  && t>0) jamming_amplitude=100; break;
             case 6: if (t%150000==0 && t>0) jamming_amplitude*=1.12201845430196; break;
-            case 7: if(imp_jam_count>=imp_jam_d)
+            /*case 7: if(imp_jam_count>=imp_jam_d)
                     {
                         imp_jam_d=int(imp_jam_dur.RandValue());
-                        imp_jam_a=floor(abs(imp_jam_amp.RandValue()))*20;
+                        imp_jam_a=floor(fabs(imp_jam_amp.RandValue()))*20;
                         imp_jam_count=0;
                     }
                     imp_jam_count++;
-                    jamming_amplitude=imp_jam_a; break;
+                    jamming_amplitude=imp_jam_a; break;*/
             default: jamming_amplitude=0; break;
         }
         //pomeha_FM = jamming_amplitude*cos(jamming_frequency*double(t)+jam_fm_freq*2*pi*sampling_interval*sin(jam_fm_speed*2*pi*sampling_interval*t));
         pomeha_FM = jamming_amplitude*cos(jamming_frequency*double(t)+jam_fm_freq*sin(jam_fm_speed*2*pi*sampling_interval*t));
         pomeha_AM = jamming_amplitude*(1+jam_am_depth*cos(jam_am_freq*1e3*2*pi*sampling_interval*t))*cos(double(t)*jamming_frequency);
-
+        pomeha = jam_am_on*pomeha_AM + jam_fm_on*pomeha_FM;
         //! Generate input radio signal
-        d_input_signal = gaussian_noise.RandValue()*1+1*sh*signal_amplitude*cos(double(t)*carrier_frequency);
-        d_input_signal += jam_am_on*pomeha_AM+jam_fm_on*pomeha_FM+(jam_am_on-1)*(jam_fm_on-1)*jamming_amplitude*cos(double(t)*jamming_frequency);
+        d_input_signal = gaussian_noise(10)*1+1*sh*signal_amplitude*cos(double(t)*carrier_frequency);
+        d_input_signal += pomeha + (jam_am_on-1)*(jam_fm_on-1)*jamming_amplitude*cos(double(t)*jamming_frequency);
         d_input_signal += jamming_amplitude_2*cos(double(t)*jamming_frequency_2);
         d_input_signal += jamming_amplitude_3*cos(double(t)*jamming_frequency_3);
 		d_input_signal += jamming_amplitude_4*cos(double(t)*jamming_frequency_4);
@@ -1354,8 +940,6 @@ LB1:
         //if(new_epoch>=1 && new_epoch<=1) str<<input_signal<<' ';
 
         //! Complex filtering for AGC
-        int complex_signal_agc = 0;
-        int outren_tmp_agc = 0;
         if(t_freq_move_fast==4) t_freq_move_fast = 0;
         int half_band_signal_i = 0;
         int half_band_signal_q = 0;
@@ -1418,7 +1002,6 @@ LB1:
         k_agc_deay[1]=k_agc_deay[0];
         k_agc_deay[0]=agc_out;
 
-        if(abs(input_signal)>max_point_value) max_point_value = abs(input_signal);
         //! AGC============================================================================
         if(t%128==0)
         {
@@ -1439,8 +1022,6 @@ LB1:
             agc_mid_level = 0;
             adc_high_bit = 0;
             adc_low_bit = 0;
-
-            max_point_value = 0;
         }
         //viv2<<d_input_signal<<' '<<input_signal<<' '<<complex_signal_i<<endl;
 
@@ -1604,32 +1185,6 @@ LB1:
             //viv2<<outren<<endl;
             if(new_epoch>=318 && new_epoch<=322)viv<<outren<<' ';
             //outren=Flt.AJFilterNew2(outren,16,0,point);
-            //rotate(&a_fft[0],&a_fft[63],&a_fft[64]);
-            //a_fft[0] = outren;
-            //if(t>100000)
-            /*if((((t+2)%(filt_div*64)))==0)
-            {
-
-                Flt.FFT(a_fft,b_fft,Nfft);
-                for(short i=0;i<Nfft;i++)
-                {
-                    //norm
-                    fft_data0[i] = Flt.GetFFT(i,0);
-                    fft_data1[i] = Flt.GetFFT(i,1);
-                    //a[i] = Flt.GetFFT(i,0);
-                    //b[i] = Flt.GetFFT(i,1);
-                    if(i>15 && i<49) fft_filt[i] = 0;
-                            else fft_filt[i] = 1;
-                    fft_data0[i] = fft_data0[i] * fft_filt[i];
-                    fft_data1[i] = fft_data1[i] * fft_filt[i];
-                }
-                Flt.FFT(fft_data1,fft_data0,Nfft);
-                for(short i=0;i<Nfft;i++)
-                {
-                    fft_data0[i] = Flt.GetFFT(i,0)/64;
-                    fft_data1[i] = Flt.GetFFT(i,1)/64;
-                }
-            }*/
             //norm<<outren<<endl;
             //short t_fft = 63 - (((t+2)/filt_div) & 0x3F);
             //str<<t_fft<<endl;
@@ -1637,27 +1192,27 @@ LB1:
             //norm<<outren<<' '<<fft_data0[t_fft]<<endl;
             //norm<<outren<<' ';
             //norm<<FltPos.IirI(outren,0,0)<<endl;
-			if(((t+2)/filt_div)>=50000 && ((t+2)/filt_div)<50512) fft_in[((t+2)/filt_div)-50000] = outren;
-			if(((t+2)/filt_div)==50512)
-			{
-				double *dfourier = FFTw(fft_in,256);
-				double max_el_fft = *max_element(&dfourier[0],&dfourier[128]);
-				double max_k = 128;
-				for(short k=0; k<128; k++)
-				{
-					fft_out[k] = 20*log10(dfourier[k]/max_el_fft);
-					viv<<fft_in[k]<<' '<<dfourier[k]<<endl;
-				}
-				for(short k=0; k<128; k++)
-				{
-					if(abs(fft_out[k]) < 0.01) max_k = k;
-				}
-				cout<<"max_k = "<<max_k<<endl;
-				for(short k=0; k<128; k++)
-				{
-					if((fft_out[short(max_k)] - fft_out[k]) < 15) cout<<"k2 = "<<k<<endl;
-				}
-			}
+            if(((t+2)/filt_div)>=50000 && ((t+2)/filt_div)<50512) fft_in[((t+2)/filt_div)-50000] = outren;
+            if(((t+2)/filt_div)==50512)
+            {
+                double *dfourier = FFTw(fft_in,256);
+                double max_el_fft = *max_element(&dfourier[0],&dfourier[128]);
+                double max_k = 128;
+                for(short k=0; k<128; k++)
+                {
+                    fft_out[k] = 20*log10(dfourier[k]/max_el_fft);
+                    viv<<fft_in[k]<<' '<<dfourier[k]<<endl;
+                }
+                for(short k=0; k<128; k++)
+                {
+                    if(fabs(fft_out[k]) < 0.01) max_k = k;
+                }
+                cout<<"max_k = "<<max_k<<endl;
+                for(short k=0; k<128; k++)
+                {
+                    if((fft_out[short(max_k)] - fft_out[k]) < 15) cout<<"k2 = "<<k<<endl;
+                }
+            }
             if(pos_filt_en == 1)
             {
                 //norm<<outren<<' ';
@@ -1681,8 +1236,8 @@ LB1:
             //if(((t+2)%100)==0)
             //	outren=Flt.AJFilterNew2(outren,16,1,point);
             //else
-                outren=Flt.AJFilterNew2(outren,16,0,point);
-                //Flt_Q.AJFilterNew2(outren,16,1,point);
+                outren=Flt.AJFilterNew2(outren,16,0,0);
+                //Flt_Q.AJFilterNew2(outren,16,1,0);
             abs_outren_1 = abs(outren);
             aj_coeff_sum_1 += abs_outren_1;
             if(abs_outren_1 > w_aj_abs_max_1) w_aj_abs_max_1 = abs_outren_1;
@@ -1696,8 +1251,7 @@ LB1:
                 jam_osn_thr_sum_1 += jam_osn_thr_int_1;
                 jam_osn_thr_mulsum_0 += jam_osn_thr_int_0*jam_osn_thr_int_0;
                 jam_osn_thr_mulsum_1 += jam_osn_thr_int_1*jam_osn_thr_int_1;
-                //viv2<<(double(aj_coeff_sum_0/256)/double(w_aj_abs_max_0))<<' ';
-                //viv2<<(double(aj_coeff_sum_1/256)/double(w_aj_abs_max_1))<<endl;
+
                 if(jam_osn_thr_int_0 > 102) jam_first_thr_0++;
                 if(jam_osn_thr_int_1 > 102) jam_first_thr_1++;
 
@@ -1710,7 +1264,7 @@ LB1:
             }
 
             //if(new_epoch_pre != new_epoch)
-			if(jam_detect_number==128 || new_epoch_pre != new_epoch)
+            if(jam_detect_number==128 || new_epoch_pre != new_epoch)
             {
                 int m_x_0 = jam_osn_thr_sum_0/jam_detect_number;
                 int m_x_1 = jam_osn_thr_sum_1/jam_detect_number;
@@ -1718,42 +1272,37 @@ LB1:
                 int m_x2_1 = jam_osn_thr_mulsum_1/jam_detect_number;
                 int d_x_0 = m_x2_0 - m_x_0*m_x_0;
                 int d_x_1 = m_x2_1 - m_x_1*m_x_1;
-                //viv2<<double(m_x_0)/256.0<<' ';
-                //viv2<<double(m_x_1)/256.0<<' ';
-                //viv2<<double(d_x_0)/256.0<<' ';
-                //viv2<<double(d_x_1)/256.0<<endl;
+
                 if(jam_first_thr_0>0) jam_exist_0 = 1;
                 else if(d_x_0<63) jam_exist_0 = 1;
                 else jam_exist_0 = 0;
                 if(jam_first_thr_1>0) jam_exist_1 = 1;
                 else if(d_x_1<63) jam_exist_1 = 1;
                 else jam_exist_1 = 0;
-				if(jam_detect_number==128)
-				{
-				viv2<<jam_first_thr_0<<' ';
-				viv2<<d_x_0<<' ';
-                viv2<<jam_first_thr_1<<' ';
-                viv2<<d_x_1<<endl;
-				}
-				
-					jam_detect_number = 0;
-					jam_osn_thr_sum_0 = 0;
-					jam_osn_thr_sum_1 = 0;
-					jam_osn_thr_mulsum_0 = 0;
-					jam_osn_thr_mulsum_1 = 0;
-					jam_first_thr_0 = 0;
-					jam_first_thr_1 = 0;
+                if(jam_detect_number==128)
+                {
+                    viv2<<jam_first_thr_0<<' ';
+                    viv2<<d_x_0<<' ';
+                    viv2<<jam_first_thr_1<<' ';
+                    viv2<<d_x_1<<endl;
+                }
+                jam_detect_number = 0;
+                jam_osn_thr_sum_0 = 0;
+                jam_osn_thr_sum_1 = 0;
+                jam_osn_thr_mulsum_0 = 0;
+                jam_osn_thr_mulsum_1 = 0;
+                jam_first_thr_0 = 0;
+                jam_first_thr_1 = 0;
 
-					jam_detect_cnt = 255;
-					aj_coeff_sum_0 = 0;
-					w_aj_abs_max_0 = 0;
-					aj_coeff_sum_1 = 0;
-					w_aj_abs_max_1 = 0;
-				
+                jam_detect_cnt = 255;
+                aj_coeff_sum_0 = 0;
+                w_aj_abs_max_0 = 0;
+                aj_coeff_sum_1 = 0;
+                w_aj_abs_max_1 = 0;               
             }
             new_epoch_pre = new_epoch;
             //norm<<outren<<endl;
-            //outren=Flt.AJFilterNew3(outren,outrensh,16,0,point);
+            //outren=Flt.AJFilterNew3(outren,outrensh,16,0,0);
             if(new_epoch>=318 && new_epoch<=322)viv<<outren<<endl;
             #if AVT2==1
             //viv<<outren<<endl;
@@ -1964,33 +1513,28 @@ LB1:
         sts++;
         stc++;
         ct++;
-        //sinc_inp_si=0;
-        //sinc_inp_sq=0;
     }
 
     v=v-correlate_offset;
     cout<<"Poteri "<<endl;
-    viv<<"w     "<<w<<endl;
     viv<<"App   "<<jamming_amplitude<<endl;
     viv<<"v     "<<v<<endl;
-    viv<<"N fil "<<l<<endl;
-    cout<<"w     "<<w<<endl;
     cout<<"App   "<<jamming_amplitude<<endl;
     cout<<"v     "<<v<<endl;
     cout<<"ADC "<<double(adc_of_bit)/(sampling_frequency*1000*loe)*100<<endl;
 
     //! Calculating SNR
-    double xmid1=0,dmid1=0,smid1=0,xmid2=0,dmid2=0,smid2=0,dmid3=0;
+    double xmid1=0,dmid1=0,smid1=0,xmid2=0,dmid2=0,smid2=0;
 
-    xmid1=accumulate<double *__w64,double>(&nmetod1[0],&nmetod1[v],0)/double(v);
-    xmid2=accumulate<double *__w64,double>(&nmetod2[0],&nmetod2[v],0)/double(v);
+    xmid1=accumulate<double *,double>(&nmetod1[0],&nmetod1[v],0)/double(v);
+    xmid2=accumulate<double *,double>(&nmetod2[0],&nmetod2[v],0)/double(v);
 
     transform(&nmetod1[0], &nmetod1[v], &nmetod1[0], bind2nd(minus<double>(), xmid1));
     transform(&nmetod1[0], &nmetod1[v], &nmetod1[0], &nmetod1[0], multiplies<double>());
-    dmid1=accumulate<double *__w64,double>(&nmetod1[0],&nmetod1[v],0)/double(v-1);
+    dmid1=accumulate<double *,double>(&nmetod1[0],&nmetod1[v],0)/double(v-1);
     transform(&nmetod2[0], &nmetod2[v], &nmetod2[0], bind2nd(minus<double>(), xmid2));
     transform(&nmetod2[0], &nmetod2[v], &nmetod2[0], &nmetod2[0], multiplies<double>());
-    dmid2=accumulate<double *__w64,double>(&nmetod2[0],&nmetod2[v],0)/double(v-1);
+    dmid2=accumulate<double *,double>(&nmetod2[0],&nmetod2[v],0)/double(v-1);
 
     smid1=xmid1*xmid1/dmid1;
     smid2=xmid2*xmid2/dmid2;
@@ -2007,7 +1551,6 @@ LB1:
     if(10*log10(smid1/ideal_snr)<-100) goto LB3;
 }
 LB3:;
-//LB2:
 //cin>>z;
 return 0;
 }
