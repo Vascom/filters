@@ -16,8 +16,6 @@
 #include <math.h>
 #include <algorithm>
 
-using namespace std;
-
 int main(int argc, char *argv[])
 {
     const double Fs = atof(argv[1]);          //Sampling frequency, Mhz
@@ -31,7 +29,7 @@ int main(int argc, char *argv[])
     const short samples = 10000;    //Freq precision. Recommended 5000-10000. More value - more time and better accuracy
     const short cic_length = 6;     //Length of CIC-filter (min 5)
 
-    ofstream out_to_file;
+    std::ofstream out_to_file;
     out_to_file.open(argv[5]);
 
     double q_stop = q_stop_min;
@@ -41,7 +39,7 @@ int main(int argc, char *argv[])
     bool non_silent_mode = true;
     if(argc==7 && atof(argv[6])!=0) non_silent_mode = false;
     if(non_silent_mode)
-        cout<<"Maximum CIC delay: "<<max_cic<<endl;
+        std::cout<<"Maximum CIC delay: "<<max_cic<<std::endl;
     while(solution_not_found || (F_stop-F_pass<6))
     {
         if(q_stop>q_stop_max)
@@ -69,8 +67,8 @@ int main(int argc, char *argv[])
         memory = new int[int(pow(max_cic,cic_length))];
 
         if(non_silent_mode)
-            cout<<F_pass<<" MHz; "<<F_stop<<" MHz; "<<q_stop<<" dB."<<endl;
-        out_to_file<<F_pass<<" MHz; "<<F_stop<<" MHz; "<<q_stop<<" dB."<<endl;
+            std::cout<<F_pass<<" MHz; "<<F_stop<<" MHz; "<<q_stop<<" dB."<<std::endl;
+        out_to_file<<F_pass<<" MHz; "<<F_stop<<" MHz; "<<q_stop<<" dB."<<std::endl;
 
         for(short i=0; i<samples;i++)
         {
@@ -115,23 +113,23 @@ int main(int argc, char *argv[])
                     ach1 /=sin_pi[i];
                     ach_log[i] = 20*log10(fabs(ach1/ach0));
                 }
-                a_max = *max_element (&ach_log[num_Fstop], &ach_log[samples]);
+                a_max = *std::max_element (&ach_log[num_Fstop], &ach_log[samples]);
                 a_tar = ach_log[int(floor(F_pass/Fs*(samples<<1)))-1];
-                max_m = *max_element (&m[0], &m[cic_length]);
+                max_m = *std::max_element (&m[0], &m[cic_length]);
                 if (a_max<q_stop &&  a_tar>q_pass && (a_tar>a_tar0 || max_m<max_min_m || a_max<a_max0))
                 {
                     if(non_silent_mode)
-                        cout<<a_max<<" dB; "<<a_tar<<" dB."<<endl;
-                    out_to_file<<a_max<<" dB; "<<a_tar<<" dB."<<endl;
+                        std::cout<<a_max<<" dB; "<<a_tar<<" dB."<<std::endl;
+                    out_to_file<<a_max<<" dB; "<<a_tar<<" dB."<<std::endl;
                     for(short i=0;i<cic_length;i++)
                     {
                         if(non_silent_mode)
-                            cout<<m[i]<<" ";
+                            std::cout<<m[i]<<" ";
                         out_to_file<<m[i]<<" ";
                     }
                     if(non_silent_mode)
-                        cout<<endl;
-                    out_to_file<<endl;
+                        std::cout<<std::endl;
+                    out_to_file<<std::endl;
                     solution_not_found = false;
                     a_tar0 = a_tar;
                     if(a_max<a_max0) a_max0 = a_max;
