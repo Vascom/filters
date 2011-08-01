@@ -275,6 +275,22 @@ test_out_7.open("data_out/test_out_7.txt");
 test_out_8.open("data_out/test_out_8.txt");
 test_out_9.open("data_out/test_out_9.txt");
 
+unsigned int inp_prn_hex[32] = {
+    0xC83949E5,0x13EAD115,0x591E9FB7,0x37CAA100,0xEA44DE0F,0x5CCF602F,0x3EA62DC6,0xF5158201,
+    0x31D81C6, 0xFFA74B61,0x56272DD8,0xEEF0D864,0x906D2DE2,0xE0527E02,0xB9F5F331,0xC6D56C6E,
+    0xE002CD9D,0xA0ABAE94,0x7389452D,0xADAD8E7, 0xB21F9688,0x7D5CC925,0xFF87DE37,0x2C3950A5,
+    0x7E3DA767,0xEFA31F01,0x28B444D8,0x1DA3448E,0x2CC9E6FC,0xCA69AF36,0xA778D442,0x24E1CA20};
+
+short inp_prn[1023];
+for(short k = 0; k<32; k++)
+    {
+        for(short n = 0; n<32; n++)
+        {
+            if((inp_prn[k]>>n)&0x1 > 0) inp_prn[k*32+n] = 1;
+            else inp_prn[k] = -1;
+        }
+    }
+
 double fr0 = 0, fr1 = 0, fr;
 cout<<"Enter fr: ";
 //cin>>fr;
@@ -328,7 +344,7 @@ short fil_pos_number = 2;
     short k=0, filter_delay=0, kk=0;
     int input_signal=0, base_cosine=0, base_sine=0, inp_prn_ajm[6000], inp_prn_ajm2[6000];
     short  sts=0, stc=0, ct=0;
-    short *outp1=NULL, *outp2=NULL, inp_prn[1023], *e5a=NULL, *e5b=NULL;
+    short *outp1=NULL, *outp2=NULL, *e5a=NULL, *e5b=NULL;
     int complex_signal_i=0, complex_signal_q=0;
     long long loe=0;
     int v=0, outm=0, outm2=0;
@@ -543,7 +559,7 @@ short fil_pos_number = 2;
     FltPos2_Q.LoadCoeff(switch_filter_use,cic_del_m,filt_cic_out_shift,mid_agc_lev_n,mid_agc_lev_p,
                   mid_agc_count_n,mid_agc_count_p,mid_agc_man,lms_mju,h3,h2);*/
     //!!UnifDev jaja(1,80), locata_sh(-1,1), locata_amp_jump(8,16);
-    InputPosled(inp_prn);
+    //InputPosled(inp_prn);
     Flt.LoadAJFilter(80,255,short(6+4+0), 10);
     Flt_Q.LoadAJFilter(80,255,short(6+4+0), 10);
 
@@ -572,8 +588,7 @@ short fil_pos_number = 2;
     jamming_frequency_10=(carrier_frequency_pre+jamming_frequency_10)*1e6*2*pi*sampling_interval;
 
     double pomeha=0;
-
-    outm=0;outm2=0;sts=0;stc=0;kk=0;v=0;ct=0;
+        outm=0;outm2=0;sts=0;stc=0;kk=0;v=0;ct=0;
     for(short g=0;g<input_sh_delay;g++)
     {
         outp1[g]=0;
