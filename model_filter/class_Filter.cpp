@@ -412,7 +412,7 @@ void Filter::LoadCoeff(short s,short cic_del_m[],
     max_slow2 = 0;
 
     locata_pattern=new double[8192];
-    ifstream loc_pattern;
+    /*ifstream loc_pattern;
     loc_pattern.open("data_in/locata_pattern.txt");//("data_in/sat10_filt1.fcf");//("data_in/h1_03.fcf");
     if(loc_pattern.fail())cout<<"file not open sat_filt1.fcf";
     for(i=0;i<8192;i++)
@@ -420,7 +420,7 @@ void Filter::LoadCoeff(short s,short cic_del_m[],
         loc_pattern>>locata_pattern[i];
         //cout<<locata_pattern[i]<<endl;
     }
-    loc_pattern.close();
+    loc_pattern.close();*/
 }
 
 //! IIR-filter

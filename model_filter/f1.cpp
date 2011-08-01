@@ -33,14 +33,15 @@ for testing
 #include <math.h>
 #include <algorithm>
 #include "class_Filter.h"
+#include <limits.h>
 
 using namespace std;
 
-double gaussian_noise( int max ) { 
-  return (rand() + rand() + rand() + rand() +
-        rand() + rand() + rand() + rand() +
-        rand() + rand() + rand() + rand() +
-        rand() + rand() + rand() + rand() ) / 16.0; 
+double gaussian_noise() 
+{
+    double tmp = 0;
+    for(short i=0; i<12; i++) tmp += double(random()) - INT_MAX/2;
+    return tmp/INT_MAX; 
 }
 
 double *FFTw( int *dIn, int nn )
@@ -256,6 +257,7 @@ short NCO_gen_sin_phase(double freq, double phase_in, long long t)
 //! Main program
 
 int main(int argc, char *argv[]){
+srandom( time( NULL ) );
 short z=0;
 ofstream norm, str, viv, viv2;
 ofstream test_out_0,test_out_1,test_out_2,test_out_4,test_out_5,test_out_6,test_out_7,test_out_8,test_out_9;
@@ -323,7 +325,7 @@ for(short s = 0;s<128;s++)
         if(f3_pre_2) f3 = s/4 + 1;
         else f3 = s/4;
         */
-    cout<<s<<' '<<f<<' '<<' '<<f1<<' '<<f2<<' '<<f3<<' '<<s-(f1+f2+f3)<<' '<<err<<endl;
+    //cout<<s<<' '<<f<<' '<<' '<<f1<<' '<<f2<<' '<<f3<<' '<<s-(f1+f2+f3)<<' '<<err<<endl;
 }
 
 double locata_pot_pre = 6;
@@ -562,6 +564,7 @@ short fil_pos_number = 2;
     //InputPosled(inp_prn);
     Flt.LoadAJFilter(80,255,short(6+4+0), 10);
     Flt_Q.LoadAJFilter(80,255,short(6+4+0), 10);
+   
 
 #if adc_agc_mode==0
     double carrier_frequency_pre=nco_carr_frec+0.0, base_frequency=(nco_carr_frec + 0.0)*1e6*2*pi*sampling_interval;
@@ -705,7 +708,7 @@ short fil_pos_number = 2;
     #endif
     short *avt2_data = NULL;
     avt2_data = new short[65536];
-    InputAVT2data(avt2_data);
+    //InputAVT2data(avt2_data);
     short gain_mode = 0;
     short jam_detect_cnt = 255;
     short jam_detect_number = 0;
@@ -780,8 +783,8 @@ short fil_pos_number = 2;
         else if(ca_p_code==10)
             if(new_chip)
             {
-                sh = double(rand());
-                if((sh)>0)sh = 1;
+                //sh = double(rand());
+                if(random() > INT_MAX/2)sh = 1;
                 else sh = -1;             
             }
         //!LOCATA code generator
@@ -811,8 +814,8 @@ short fil_pos_number = 2;
         else if(ca_p_code==10)
             if(new_chip2)
             {
-                sh2=double(rand());
-                if(sh2>0) sh2 = 1;
+                //sh2=double(rand());
+                if(random() > INT_MAX/2) sh2 = 1;
                 else sh2 = -1;
             }
         #if LOCATA==0
@@ -846,7 +849,7 @@ short fil_pos_number = 2;
         pomeha_AM = jamming_amplitude*(1+jam_am_depth*cos(jam_am_freq*1e3*2*pi*sampling_interval*t))*cos(double(t)*jamming_frequency);
         pomeha = jam_am_on*pomeha_AM + jam_fm_on*pomeha_FM;
         //! Generate input radio signal
-        d_input_signal = gaussian_noise(10)*1+1*sh*signal_amplitude*cos(double(t)*carrier_frequency);
+        d_input_signal = gaussian_noise()*1+1*sh*signal_amplitude*cos(double(t)*carrier_frequency);
         d_input_signal += pomeha + (jam_am_on-1)*(jam_fm_on-1)*jamming_amplitude*cos(double(t)*jamming_frequency);
         d_input_signal += jamming_amplitude_2*cos(double(t)*jamming_frequency_2);
         d_input_signal += jamming_amplitude_3*cos(double(t)*jamming_frequency_3);
