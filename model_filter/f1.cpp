@@ -418,7 +418,7 @@ short fil_pos_number = 2;
     int jam_am_on;
     double jam_am_freq;
     double jam_am_depth;
-    int filt_div;
+    short int filt_div;
     //! Reading parameters from configuration file
     char shift1[64];
     FILE *config;
@@ -483,60 +483,60 @@ short fil_pos_number = 2;
         fscanf (config, "%s", &shift1 );fscanf( config, "%lf", &jamming_amplitude_8 );
         fscanf (config, "%s", &shift1 );fscanf( config, "%lf", &jamming_amplitude_9 );
         fscanf (config, "%s", &shift1 );fscanf( config, "%lf", &jamming_amplitude_10 );
-        fscanf (config, "%s", &shift1 );fscanf( config, "%ld", &jam_pulse_on );
-        fscanf (config, "%s", &shift1 );fscanf( config, "%ld", &jam_pulse_width );
-        fscanf (config, "%s", &shift1 );fscanf( config, "%ld", &jam_pulse_period );
-        fscanf (config, "%s", &shift1 );fscanf( config, "%ld", &jam_fm_on );
+        fscanf (config, "%s", &shift1 );fscanf( config, "%d", &jam_pulse_on );
+        fscanf (config, "%s", &shift1 );fscanf( config, "%d", &jam_pulse_width );
+        fscanf (config, "%s", &shift1 );fscanf( config, "%d", &jam_pulse_period );
+        fscanf (config, "%s", &shift1 );fscanf( config, "%d", &jam_fm_on );
         fscanf (config, "%s", &shift1 );fscanf( config, "%lf", &jam_fm_freq );
         fscanf (config, "%s", &shift1 );fscanf( config, "%lf", &jam_fm_speed );
-        fscanf (config, "%s", &shift1 );fscanf( config, "%ld", &jam_am_on );
+        fscanf (config, "%s", &shift1 );fscanf( config, "%d", &jam_am_on );
         fscanf (config, "%s", &shift1 );fscanf( config, "%lf", &jam_am_freq );
         fscanf (config, "%s", &shift1 );fscanf( config, "%lf", &jam_am_depth );
 
         for(short i=0;i<2;i++)fscanf( config, "%s", &shift1 );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &nco_freq );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &filt_div );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &cic_del_m[0] );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &cic_del_m[1] );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &cic_del_m[2] );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &cic_del_m[3] );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &cic_del_m[4] );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &cic_del_m[5] );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &filt_cic_out_shift );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &mid_agc_lev_n );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &mid_agc_lev_p );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &mid_agc_count_n );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &mid_agc_count_p );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &mid_agc_man );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &lms_mju );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &nco_freq );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &filt_div );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &cic_del_m[0] );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &cic_del_m[1] );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &cic_del_m[2] );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &cic_del_m[3] );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &cic_del_m[4] );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &cic_del_m[5] );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &filt_cic_out_shift );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &mid_agc_lev_n );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &mid_agc_lev_p );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &mid_agc_count_n );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &mid_agc_count_p );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &mid_agc_man );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &lms_mju );
         for(short i=0;i<30;i++)
         {
             fscanf( config, "%s", &shift1 );
-            fscanf( config, "%ld", &h1[i] );
+            fscanf( config, "%hd", &h1[i] );
         }
         for(short i=0;i<10;i++)
         {
             fscanf( config, "%s", &shift1 );
-            fscanf( config, "%ld", &h2[i] );
+            fscanf( config, "%hd", &h2[i] );
         }
         for(short i=0;i<fil_pos_length;i++)
         {
             fscanf( config, "%s", &shift1 );
-            fscanf( config, "%ld", &h_pos[i] );
+            fscanf( config, "%hd", &h_pos[i] );
         }
 
         for(short i=0;i<22;i++)fscanf( config, "%s", &shift1 );
         fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &log_length );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &rf_real_0_en );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &rf_I_en );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &rf_Q_en );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &comb_out_en );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &d6_en );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &co_rnd_en );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &cic_out_en );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &sfir_en );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &aj_out_en );
-        fscanf( config, "%s", &shift1 );fscanf( config, "%ld", &qnt_en );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &rf_real_0_en );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &rf_I_en );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &rf_Q_en );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &comb_out_en );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &d6_en );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &co_rnd_en );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &cic_out_en );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &sfir_en );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &aj_out_en );
+        fscanf( config, "%s", &shift1 );fscanf( config, "%hd", &qnt_en );
 
         fclose( config );
     }
