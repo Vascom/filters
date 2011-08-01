@@ -286,10 +286,10 @@ unsigned int inp_prn_hex[32] = {
 short inp_prn[1023];
 for(short k = 0; k<32; k++)
     {
-        for(short n = 0; n<32; n++)
+        for(short n = 31; n>=0; n--)
         {
-            if((inp_prn[k]>>n)&0x1 > 0) inp_prn[k*32+n] = 1;
-            else inp_prn[k] = -1;
+            if(((inp_prn_hex[k]>>n)&0x1) > 0) inp_prn[k*32+(31-n)] = 1;
+            else inp_prn[k*32+(31-n)] = -1;
         }
     }
 
