@@ -121,7 +121,7 @@ public:
     int FirI(int,short,short);
     int FirIpos(int,short,short);
     int FirIn(int,short,short);
-    int FirH(int,short,short,short);
+    int FirH(short,short,short,short);
     int CICFilter(int);
     short AGCMid(int, long long);
     int AGCMids(int,int,int,int, long long);

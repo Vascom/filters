@@ -971,7 +971,7 @@ int Filter::FirIn(int re, short k1, short k2)
     return p1;
 }
 //! Half-band FIR-filter
-int Filter::FirH(int re, short k1, short k2, short sw)
+int Filter::FirH(short re, short k1, short k2, short sw)
 {
     if(sw == 1)
     {
