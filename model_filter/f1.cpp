@@ -330,6 +330,8 @@ for(short s = 0;s<128;s++)
 
 double locata_pot_pre = 6;
 short pos_filt_en = 0;
+short fft_en = 0;
+short jam_detect_en = 0;
 double k_cycle = 0;
 short fil_pos_length = 128;
 short fil_pos_number = 2;
@@ -344,7 +346,8 @@ short fil_pos_number = 2;
     //if (parameter_0==65536) agc_algorithm = 0;
     //else agc_algorithm = 1;
     short k=0, filter_delay=0, kk=0;
-    int input_signal=0, base_cosine=0, base_sine=0, inp_prn_ajm[6000], inp_prn_ajm2[6000];
+    int base_cosine=0, base_sine=0, inp_prn_ajm[6000], inp_prn_ajm2[6000];
+    short input_signal=0;
     short  sts=0, stc=0, ct=0;
     short *outp1=NULL, *outp2=NULL, *e5a=NULL, *e5b=NULL;
     int complex_signal_i=0, complex_signal_q=0;
@@ -853,9 +856,9 @@ short fil_pos_number = 2;
         d_input_signal += pomeha + (jam_am_on-1)*(jam_fm_on-1)*jamming_amplitude*cos(double(t)*jamming_frequency);
         d_input_signal += jamming_amplitude_2*cos(double(t)*jamming_frequency_2);
         d_input_signal += jamming_amplitude_3*cos(double(t)*jamming_frequency_3);
-		d_input_signal += jamming_amplitude_4*cos(double(t)*jamming_frequency_4);
+        d_input_signal += jamming_amplitude_4*cos(double(t)*jamming_frequency_4);
         d_input_signal += jamming_amplitude_5*cos(double(t)*jamming_frequency_5);
-		d_input_signal += jamming_amplitude_6*cos(double(t)*jamming_frequency_6);
+        d_input_signal += jamming_amplitude_6*cos(double(t)*jamming_frequency_6);
         //d_input_signal += jamming_amplitude*cos(double(t)*2*pi*(jamming_frequency-11e6)*sampling_interval+pi/8);
         //d_input_signal += jamming_amplitude*cos(double(t)*2*pi*(jamming_frequency-3*1e6)*sampling_interval+pi/3);
         //d_input_signal += jamming_amplitude*cos(double(t)*2*pi*(jamming_frequency+9*1e6)*sampling_interval+pi/2);
@@ -883,15 +886,7 @@ short fil_pos_number = 2;
         #if AVT2==1
         input_signal = avt2_data[t];
         #endif
-        //input_signal += 6;
-        //viv<<input_signal<<' '<<input_signal/128<<endl;
-        //input_signal = (input_signal & 0xfffffff0);
-        //int input_signal_test = (input_signal & 0xfffffff0);
-        short input_signal_sign = 0;
-        if(input_signal<0) input_signal_sign = 1;
-        input_signal = (abs(input_signal) & 0xffffffff);
-        if(input_signal_sign==1) input_signal = -input_signal;
-        //norm<<input_signal<<' '<<input_signal_test<<endl;
+
         agc_mid_level+=abs(input_signal<<2);
         //viv2<<input_signal<<endl;//<<' '<<real_gain_coeff<<' '<<agc_mid_level<<endl;
         input_signal*=input_mult;
@@ -1210,25 +1205,28 @@ short fil_pos_number = 2;
             //norm<<outren<<' '<<fft_data0[t_fft]<<endl;
             //norm<<outren<<' ';
             //norm<<FltPos.IirI(outren,0,0)<<endl;
-            if(((t+2)/filt_div)>=50000 && ((t+2)/filt_div)<50512) fft_in[((t+2)/filt_div)-50000] = outren;
-            if(((t+2)/filt_div)==50512)
+            if(fft_en == 1)
             {
-                double *dfourier = FFTw(fft_in,256);
-                double max_el_fft = *max_element(&dfourier[0],&dfourier[128]);
-                double max_k = 128;
-                for(short k=0; k<128; k++)
+                if(((t+2)/filt_div)>=50000 && ((t+2)/filt_div)<50512) fft_in[((t+2)/filt_div)-50000] = outren;
+                if(((t+2)/filt_div)==50512)
                 {
-                    fft_out[k] = 20*log10(dfourier[k]/max_el_fft);
-                    viv<<fft_in[k]<<' '<<dfourier[k]<<endl;
-                }
-                for(short k=0; k<128; k++)
-                {
-                    if(fabs(fft_out[k]) < 0.01) max_k = k;
-                }
-                cout<<"max_k = "<<max_k<<endl;
-                for(short k=0; k<128; k++)
-                {
-                    if((fft_out[short(max_k)] - fft_out[k]) < 15) cout<<"k2 = "<<k<<endl;
+                    double *dfourier = FFTw(fft_in,256);
+                    double max_el_fft = *max_element(&dfourier[0],&dfourier[128]);
+                    double max_k = 128;
+                    for(short k=0; k<128; k++)
+                    {
+                        fft_out[k] = 20*log10(dfourier[k]/max_el_fft);
+                        viv<<fft_in[k]<<' '<<dfourier[k]<<endl;
+                    }
+                    for(short k=0; k<128; k++)
+                    {
+                        if(fabs(fft_out[k]) < 0.01) max_k = k;
+                    }
+                    cout<<"max_k = "<<max_k<<endl;
+                    for(short k=0; k<128; k++)
+                    {
+                        if((fft_out[short(max_k)] - fft_out[k]) < 15) cout<<"k2 = "<<k<<endl;
+                    }
                 }
             }
             if(pos_filt_en == 1)
@@ -1256,67 +1254,70 @@ short fil_pos_number = 2;
             //else
                 outren=Flt.AJFilterNew2(outren,16,0,0);
                 //Flt_Q.AJFilterNew2(outren,16,1,0);
-            abs_outren_1 = abs(outren);
-            aj_coeff_sum_1 += abs_outren_1;
-            if(abs_outren_1 > w_aj_abs_max_1) w_aj_abs_max_1 = abs_outren_1;
-
-            jam_detect_cnt--;
-            if(jam_detect_cnt==-1)
+            if(jam_detect_en == 1)
             {
-                jam_osn_thr_int_0 = int(floor(double(aj_coeff_sum_0/256)/double(w_aj_abs_max_0)*256+0.5));
-                jam_osn_thr_int_1 = int(floor(double(aj_coeff_sum_1/256)/double(w_aj_abs_max_1)*256+0.5));
-                jam_osn_thr_sum_0 += jam_osn_thr_int_0;
-                jam_osn_thr_sum_1 += jam_osn_thr_int_1;
-                jam_osn_thr_mulsum_0 += jam_osn_thr_int_0*jam_osn_thr_int_0;
-                jam_osn_thr_mulsum_1 += jam_osn_thr_int_1*jam_osn_thr_int_1;
+                abs_outren_1 = abs(outren);
+                aj_coeff_sum_1 += abs_outren_1;
+                if(abs_outren_1 > w_aj_abs_max_1) w_aj_abs_max_1 = abs_outren_1;
 
-                if(jam_osn_thr_int_0 > 102) jam_first_thr_0++;
-                if(jam_osn_thr_int_1 > 102) jam_first_thr_1++;
-
-                jam_detect_cnt = 255;
-                aj_coeff_sum_0 = 0;
-                w_aj_abs_max_0 = 0;
-                aj_coeff_sum_1 = 0;
-                w_aj_abs_max_1 = 0;
-                jam_detect_number++;
-            }
-
-            //if(new_epoch_pre != new_epoch)
-            if(jam_detect_number==128 || new_epoch_pre != new_epoch)
-            {
-                int m_x_0 = jam_osn_thr_sum_0/jam_detect_number;
-                int m_x_1 = jam_osn_thr_sum_1/jam_detect_number;
-                int m_x2_0 = jam_osn_thr_mulsum_0/jam_detect_number;
-                int m_x2_1 = jam_osn_thr_mulsum_1/jam_detect_number;
-                int d_x_0 = m_x2_0 - m_x_0*m_x_0;
-                int d_x_1 = m_x2_1 - m_x_1*m_x_1;
-
-                if(jam_first_thr_0>0) jam_exist_0 = 1;
-                else if(d_x_0<63) jam_exist_0 = 1;
-                else jam_exist_0 = 0;
-                if(jam_first_thr_1>0) jam_exist_1 = 1;
-                else if(d_x_1<63) jam_exist_1 = 1;
-                else jam_exist_1 = 0;
-                if(jam_detect_number==128)
+                jam_detect_cnt--;
+                if(jam_detect_cnt==-1)
                 {
-                    viv2<<jam_first_thr_0<<' ';
-                    viv2<<d_x_0<<' ';
-                    viv2<<jam_first_thr_1<<' ';
-                    viv2<<d_x_1<<endl;
-                }
-                jam_detect_number = 0;
-                jam_osn_thr_sum_0 = 0;
-                jam_osn_thr_sum_1 = 0;
-                jam_osn_thr_mulsum_0 = 0;
-                jam_osn_thr_mulsum_1 = 0;
-                jam_first_thr_0 = 0;
-                jam_first_thr_1 = 0;
+                    jam_osn_thr_int_0 = int(floor(double(aj_coeff_sum_0/256)/double(w_aj_abs_max_0)*256+0.5));
+                    jam_osn_thr_int_1 = int(floor(double(aj_coeff_sum_1/256)/double(w_aj_abs_max_1)*256+0.5));
+                    jam_osn_thr_sum_0 += jam_osn_thr_int_0;
+                    jam_osn_thr_sum_1 += jam_osn_thr_int_1;
+                    jam_osn_thr_mulsum_0 += jam_osn_thr_int_0*jam_osn_thr_int_0;
+                    jam_osn_thr_mulsum_1 += jam_osn_thr_int_1*jam_osn_thr_int_1;
 
-                jam_detect_cnt = 255;
-                aj_coeff_sum_0 = 0;
-                w_aj_abs_max_0 = 0;
-                aj_coeff_sum_1 = 0;
-                w_aj_abs_max_1 = 0;               
+                    if(jam_osn_thr_int_0 > 102) jam_first_thr_0++;
+                    if(jam_osn_thr_int_1 > 102) jam_first_thr_1++;
+
+                    jam_detect_cnt = 255;
+                    aj_coeff_sum_0 = 0;
+                    w_aj_abs_max_0 = 0;
+                    aj_coeff_sum_1 = 0;
+                    w_aj_abs_max_1 = 0;
+                    jam_detect_number++;
+                }
+
+                //if(new_epoch_pre != new_epoch)
+                if(jam_detect_number==128 || new_epoch_pre != new_epoch)
+                {
+                    int m_x_0 = jam_osn_thr_sum_0/jam_detect_number;
+                    int m_x_1 = jam_osn_thr_sum_1/jam_detect_number;
+                    int m_x2_0 = jam_osn_thr_mulsum_0/jam_detect_number;
+                    int m_x2_1 = jam_osn_thr_mulsum_1/jam_detect_number;
+                    int d_x_0 = m_x2_0 - m_x_0*m_x_0;
+                    int d_x_1 = m_x2_1 - m_x_1*m_x_1;
+
+                    if(jam_first_thr_0>0) jam_exist_0 = 1;
+                    else if(d_x_0<63) jam_exist_0 = 1;
+                    else jam_exist_0 = 0;
+                    if(jam_first_thr_1>0) jam_exist_1 = 1;
+                    else if(d_x_1<63) jam_exist_1 = 1;
+                    else jam_exist_1 = 0;
+                    if(jam_detect_number==128)
+                    {
+                        viv2<<jam_first_thr_0<<' ';
+                        viv2<<d_x_0<<' ';
+                        viv2<<jam_first_thr_1<<' ';
+                        viv2<<d_x_1<<endl;
+                    }
+                    jam_detect_number = 0;
+                    jam_osn_thr_sum_0 = 0;
+                    jam_osn_thr_sum_1 = 0;
+                    jam_osn_thr_mulsum_0 = 0;
+                    jam_osn_thr_mulsum_1 = 0;
+                    jam_first_thr_0 = 0;
+                    jam_first_thr_1 = 0;
+
+                    jam_detect_cnt = 255;
+                    aj_coeff_sum_0 = 0;
+                    w_aj_abs_max_0 = 0;
+                    aj_coeff_sum_1 = 0;
+                    w_aj_abs_max_1 = 0;
+                }
             }
             new_epoch_pre = new_epoch;
             //norm<<outren<<endl;
