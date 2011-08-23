@@ -7,7 +7,7 @@ READ_WRITE_SETTINGS="--read_settings_files=on --write_settings_files=off"
 echo "Start mapping"
 quartus_map $EN64 --parallel=on $READ_WRITE_SETTINGS $PROJECT_NAME -c $PROJECT_NAME &>longlog.map.log
 
-ERROR_PRESENT=`cat $PROJECT_NAME.map.rpt | grep -c Error`
+ERROR_PRESENT=`cat $PROJECT_NAME.map.rpt | grep -c Error:`
 if [ $ERROR_PRESENT == 0 ]
 then
     echo "Start merging"
@@ -17,7 +17,7 @@ else
     exit
 fi
 
-ERROR_PRESENT=`cat $PROJECT_NAME.merge.rpt | grep -c Error`
+ERROR_PRESENT=`cat $PROJECT_NAME.merge.rpt | grep -c Error:`
 if [ $ERROR_PRESENT == 0 ]
 then
     echo "Start fitting"
@@ -27,7 +27,7 @@ else
     exit
 fi
 
-ERROR_PRESENT=`cat $PROJECT_NAME.fit.rpt | grep -c Error`
+ERROR_PRESENT=`cat $PROJECT_NAME.fit.rpt | grep -c Error:`
 if [ $ERROR_PRESENT == 0 ]
 then
     echo "Start STA and assembling"
