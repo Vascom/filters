@@ -33,7 +33,7 @@ quartus_map $EN64 --parallel=on $READ_WRITE_SETTINGS $PROJECT_NAME -c $PROJECT_N
 get_stop_time
 print_time
 
-ERROR_PRESENT=`cat $PROJECT_NAME.map.rpt | grep -c Error:`
+ERROR_PRESENT=`grep -c "Error:" "$PROJECT_NAME.map.rpt"`
 if [ $ERROR_PRESENT == 0 ]
 then
     echo "Start merging"
@@ -43,10 +43,10 @@ else
     exit
 fi
 #======================================================================================================
-ERROR_PRESENT=`cat $PROJECT_NAME.merge.rpt | grep -c Error:`
+ERROR_PRESENT=`grep -c "Error:" "$PROJECT_NAME.merge.rpt"`
 if [ $ERROR_PRESENT == 0 ]
 then
-    echo -n "Start fitting"
+    echo -n "Start fitting "
 
     get_start_time
     quartus_fit $EN64 --parallel=4 $READ_WRITE_SETTINGS $PROJECT_NAME -c $PROJECT_NAME &>longlog.fit.log
@@ -57,14 +57,14 @@ else
     exit
 fi
 #======================================================================================================
-ERROR_PRESENT=`cat $PROJECT_NAME.fit.rpt | grep -c Error:`
+ERROR_PRESENT=`grep -c "Error:" "$PROJECT_NAME.fit.rpt"`
 if [ $ERROR_PRESENT == 0 ]
 then
     echo "Start STA and assembling"
     quartus_sta $EN64 --parallel=4 $PROJECT_NAME -c $PROJECT_NAME 1>/dev/null
     quartus_asm $EN64 $READ_WRITE_SETTINGS $PROJECT_NAME -c $PROJECT_NAME 1>/dev/null &
-    cat $PROJECT_NAME.sta.rpt | head -n 2
-    cat $PROJECT_NAME.sta.rpt | head -n 159 | tail -n 9
+    head -n 2 $PROJECT_NAME.sta.rpt
+    head -n 159 $PROJECT_NAME.sta.rpt | tail -n 9
 
     echo "All finished"
 else
