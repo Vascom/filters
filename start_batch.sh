@@ -77,7 +77,8 @@ then
     quartus_sta $EN64 --parallel=4 $PROJECT_NAME -c $PROJECT_NAME 1>/dev/null
     quartus_asm $EN64 $READ_WRITE_SETTINGS $PROJECT_NAME -c $PROJECT_NAME 1>/dev/null &
     head -n 2 $PROJECT_NAME.sta.rpt
-    head -n 159 $PROJECT_NAME.sta.rpt | tail -n 9
+    #head -n 159 $PROJECT_NAME.sta.rpt | tail -n 9
+    grep "Restricted Fmax" "$PROJECT_NAME.sta.rpt" -m 1 -A 9
 
     echo "All finished"
 else
