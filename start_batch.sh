@@ -3,6 +3,17 @@
 PROJECT_NAME="leon3mp"
 EN64="--64bit"
 READ_WRITE_SETTINGS="--read_settings_files=on --write_settings_files=off"
+ERROR_PRINT=1
+
+if [[ $1 == errmap ]]
+then
+    grep "Error " "$PROJECT_NAME.map.rpt"
+    exit
+elif [[ $1 == errfit ]]
+then
+    grep "Error " "$PROJECT_NAME.fit.rpt"
+    exit
+fi
 
 function get_start_time() {
     if [ -e "$PROJECT_NAME.$1.rpt" ]
@@ -58,6 +69,10 @@ then
     quartus_cdb $EN64 $READ_WRITE_SETTINGS $PROJECT_NAME -c $PROJECT_NAME --merge=on 2>&1 1>>longlog.map.log
 else
     echo -e "\nFinished with errors in mapping"
+    if [[ ERROR_PRINT == 1 ]]
+    then
+        grep "Error " "$PROJECT_NAME.map.rpt"
+    fi
     exit
 fi
 #======================================================================================================
